@@ -31,7 +31,7 @@ if (geminiApiKey === "" && typeof __gemini_api_key === 'undefined') { // Only lo
 
 
 export const universities = [
-    { id: 'ufba', name: 'Universidade Federal da Bahia (UFBA)', institutes: ['ic_ufba'], logo: 'https://ava.ufba.br/pluginfile.php/3/theme_adaptable/logo/1745856514/logo_ufba.png' }
+    { id: 'ufba', name: 'Universidade Federal da Bahia (UFBA)', institutes: ['ic_ufba'], logo: 'https://upload.wikimedia.org/wikipedia/commons/4/40/Bras%C3%A3o_da_UFBA.png' }
 ];
 
 export const allInstitutesSectors = [

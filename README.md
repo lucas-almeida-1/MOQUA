@@ -55,7 +55,7 @@ MOQUA/
 1.  **Clone o repositório:**
 
     ```bash
-    git clone <seu-repositorio>
+    git clone https://github.com/lucas-almeida-1/MOQUA.git
     cd MOQUA
     ```
 
@@ -93,6 +93,60 @@ MOQUA/
 *   A funcionalidade de análise com IA requer uma chave da API Gemini.
 *   As configurações de notificação (SMS, Email, WhatsApp) são apenas simulações e não enviam notificações reais.
 *   Este projeto foi desenvolvido para fins de estudo e demonstração.
+
+## Capturas de tela
+
+Estas são capturas de recursos de cada tela da aplicação:
+
+<div align="center">
+  Home Screen. Nela, podemos buscar uma universidade específica ou setores internos de uma determinada universidade.
+  <img src="https://github.com/user-attachments/assets/e3559556-72e5-4454-ba37-c0943b919a86" alt="Home Screen" width="" height="" >
+</div>
+<hr>
+<div align="center">
+  Dark Home Screen. Perceba que todas as páginas possuem essa feature no canto superior da página para troca.
+  <img src="https://github.com/user-attachments/assets/1bda71c3-d8b8-4077-8121-c60381f8753c" alt="Dark Home Screen" width="" height="" >
+</div>
+<hr>
+<div align="center">
+  Busca de um determinado setor de uma universidade. Desta vez, a filtragem é apenas dentro da mesma universidade.
+  <img src="https://github.com/user-attachments/assets/92807bc7-46ca-4d48-8ae7-d7cb3cce3724" alt="Sector Search Screen" width="" height="" >
+</div>
+<hr>
+<div align="center">
+  Um pop-up é exibido ao abrir o dashboard caso tenha um caso crítico ou alerta de má qualidade de água.
+  <img src="https://github.com/user-attachments/assets/daea0776-49fd-4d16-8dd6-b1b92dd75551" alt="Alert Pop-up" width="" height="" >
+</div>
+<hr>
+<div align="center">
+  Recurso de filtragem de fontes de água.
+  <img src="https://github.com/user-attachments/assets/58dd701a-94ea-418a-811a-b719ec277131" alt="Dashboard Screen with filter feature" width="" height="" >
+</div>
+<hr>
+<div align="center">
+  Pop-up para feedback do usuário. Estas reclamações serão enviadas diretamente aos gestores para posterior análise.
+  <img src="https://github.com/user-attachments/assets/f11f9e08-4fc3-4391-a552-f461dfa6542e" alt="User Feedback Pop-up with text field validation" width="" height="" >
+</div>
+<hr>
+<div align="center">
+  Login para acesso restrito aos gestores. Note que todas os campos obrigatórios da plataforma já possuem sistema de validação de conteúdo.
+  <img src="https://github.com/user-attachments/assets/dc55315c-4702-4a27-865c-166d15beaa6d" alt="Manager Login Screen with text field validation" width="" height="" >
+</div>
+<hr>
+<div align="center">
+  Área do Gestor com integração IA para gerar insights em tempo real dos dados.
+  <img src="https://github.com/user-attachments/assets/5c5af159-2b73-438a-a78f-96d08dc444e9" alt="Manager Screen with AI integration for real time insights" width="" height="" >
+</div>
+<hr>
+<div align="center">
+  Sistema de notificação para os gestores.
+  <img src="https://github.com/user-attachments/assets/9ddba96d-a72a-4f63-a192-b7c0684dd8d9" alt="Notification System on Manager Screen" width="" height="" >
+</div>
+<hr>
+<div align="center">
+  Preview do PDF com os dados para exportação e possibilidade de baixar o material.
+  <img src="https://github.com/user-attachments/assets/4ccab449-c880-416c-900e-086e66d7fae9" alt="PDF preview and download option on Manager Screen Pop-up" width="" height="" >
+</div>
 
 ## Contribuição
 

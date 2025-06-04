@@ -99,13 +99,13 @@ MOQUA/
 Estas são capturas de recursos de cada tela da aplicação:
 
 <div align="center">
-  Home Screen. Nela, podemos buscar uma universidade específica ou setores internos de uma determinada universidade.
-  <img src="https://github.com/user-attachments/assets/e3559556-72e5-4454-ba37-c0943b919a86" alt="Home Screen" width="" height="" >
+  Home Screen. Nela, podemos buscar uma universidade específica ou seus respectivos setores internos.
+  <img src="https://github.com/user-attachments/assets/3bff0804-5eac-4392-9b5d-6d69fddc3606" alt="Home Screen" width="" height="" >
 </div>
 <hr>
 <div align="center">
   Dark Home Screen. Perceba que todas as páginas possuem essa feature no canto superior da página para troca.
-  <img src="https://github.com/user-attachments/assets/1bda71c3-d8b8-4077-8121-c60381f8753c" alt="Dark Home Screen" width="" height="" >
+  <img src="https://github.com/user-attachments/assets/fb0611b4-c186-4667-b88f-2e1ab54c8959" alt="Dark Home Screen" width="" height="" >
 </div>
 <hr>
 <div align="center">

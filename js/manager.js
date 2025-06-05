@@ -9,9 +9,9 @@ import {
     query, 
     orderBy, 
     onSnapshot,
-    doc,
-    setDoc,
-    getDoc
+    doc,    
+    setDoc, 
+    getDoc  
 } from './firebase.js';
 import { appId } from './config.js';
 
@@ -39,17 +39,24 @@ export async function handleLogin(event, appInstance) {
     if (!isValid) return;
 
     if (!auth) {
-        showNotificationModal('Serviço de autenticação não está disponível.', 'error');
+        showNotificationModal('Serviço de autenticação não está disponível. Verifique a conexão com o Firebase.', 'error');
         return;
     }
 
     try {
         const userCredential = await signInWithEmailAndPassword(auth, email, password);
-        // onAuthStateChanged em firebase.js cuidará da atualização do nome e redirecionamento
+        const user = userCredential.user;
+        console.log("[Manager] Login bem-sucedido para:", user.email);
+        
+        // Atualiza o nome do gestor na UI (o onAuthStateChanged também fará isso, mas aqui garante imediatamente)
+        const managerName = user.displayName || (user.email ? user.email.split('@')[0].replace(/\./g, ' ').replace(/\b\w/g, l => l.toUpperCase()) : "Gestor");
+        const managerWelcomeNameEl = document.getElementById('manager-welcome-name');
+        if (managerWelcomeNameEl) managerWelcomeNameEl.textContent = managerName;
+        
         showNotificationModal('Login bem-sucedido! Redirecionando...', 'success');
-        // O showPage será chamado pelo onAuthStateChanged se o login for bem-sucedido e o usuário ainda estiver na página de login.
+        showPage('manager-dashboard-page', appInstance); // Chama showPage diretamente
     } catch (error) {
-        console.error("Erro no login:", error);
+        console.error("[Manager] Erro no login:", error);
         let errorMessage = "Falha no login. Verifique suas credenciais.";
         if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
             errorMessage = "Email ou senha inválidos.";
@@ -68,27 +75,33 @@ export async function handleLogout(appInstance) {
     }
     try {
         await signOut(auth);
-        console.log("Logout bem-sucedido.");
+        console.log("[Manager] Logout bem-sucedido.");
         appInstance.lastAiAnalysisText = null; 
         showNotificationModal("Logout realizado com sucesso.", "info");
         stopListeningToComplaints(); 
-        showPage('login-page', appInstance);
+        // A lógica em onAuthStateChanged (em firebase.js) deve redirecionar para 'login-page' se App.currentPage era 'manager-dashboard-page'
+        // Mas podemos chamar explicitamente para garantir, ou deixar onAuthStateChanged cuidar.
+        // Por segurança, chamaremos aqui também.
+        showPage('login-page', appInstance); 
     } catch (error) {
-        console.error("Erro ao fazer logout:", error);
+        console.error("[Manager] Erro ao fazer logout:", error);
         showNotificationModal("Erro ao tentar fazer logout.", "error");
     }
 }
 
+
 export function renderManagerDashboard(appInstance) {
     const overviewContainer = document.getElementById('manager-realtime-data');
-    if (!overviewContainer) return;
+    if (!overviewContainer) {
+        console.warn("[Manager] Elemento 'manager-realtime-data' não encontrado.");
+        return;
+    }
     overviewContainer.innerHTML = '';
     let criticalCount = 0;
     let attentionCount = 0;
     let goodCount = 0;
 
-    // Atualiza o nome do gestor usando os detalhes do usuário do Firebase
-    const userDetails = appInstance.currentUserId() ? appInstance.auth.currentUser : null; // Re-check current user from auth
+    const userDetails = appInstance.auth?.currentUser; // Pega o usuário logado diretamente do auth
     const managerName = userDetails?.displayName || (userDetails?.email ? userDetails.email.split('@')[0].replace(/\./g, ' ').replace(/\b\w/g, l => l.toUpperCase()) : "Gestor");
     const managerWelcomeNameEl = document.getElementById('manager-welcome-name');
     if (managerWelcomeNameEl) managerWelcomeNameEl.textContent = managerName;
@@ -122,12 +135,25 @@ export function renderManagerDashboard(appInstance) {
     const aiResultDiv = document.getElementById('ai-analysis-result');
     if(aiResultDiv) aiResultDiv.innerHTML = ''; 
     
-    loadNotificationPreferences(appInstance); // Carrega as preferências ao renderizar o dashboard
+    // loadNotificationPreferences é chamado por showPage quando manager-dashboard-page é ativado
 }
 
 export async function loadNotificationPreferences(appInstance) {
-    const userId = appInstance.currentUserId();
-    if (!userId || !db) return;
+    const userId = appInstance.currentUserId(); // Usa a função de getCurrentUserId do appInstance
+    if (!userId || !db) {
+        console.warn("[Manager] Não é possível carregar preferências: Usuário não logado ou DB não inicializado.");
+        // Define um estado padrão para a UI se as preferências não puderem ser carregadas
+        document.getElementById('sms-checkbox').checked = false;
+        document.getElementById('sms-number').value = '';
+        document.getElementById('email-checkbox').checked = false;
+        document.getElementById('email-address').value = '';
+        document.getElementById('whatsapp-checkbox').checked = false;
+        document.getElementById('whatsapp-number').value = '';
+        document.getElementById('whatsapp-autopopulate-sms').checked = false;
+        appInstance.editingNotificationPrefs = false;
+        updateNotificationInputsState(appInstance);
+        return;
+    }
 
     const prefsRef = doc(db, `/artifacts/${appId}/users/${userId}/manager_preferences/notifications`);
     try {
@@ -140,16 +166,23 @@ export async function loadNotificationPreferences(appInstance) {
             document.getElementById('email-address').value = prefs.emailAddress || '';
             document.getElementById('whatsapp-checkbox').checked = prefs.whatsappEnabled || false;
             document.getElementById('whatsapp-number').value = prefs.whatsappNumber || '';
+            document.getElementById('whatsapp-autopopulate-sms').checked = prefs.whatsappAutopopulate || false;
             console.log("[Manager] Preferências de notificação carregadas.");
         } else {
-            console.log("[Manager] Nenhuma preferência de notificação encontrada para o gestor. Usando padrões.");
-            // Deixar os campos como estão (desmarcado/vazio)
+            console.log("[Manager] Nenhuma preferência de notificação encontrada. Usando padrões.");
+             document.getElementById('sms-checkbox').checked = false;
+             document.getElementById('sms-number').value = '';
+             document.getElementById('email-checkbox').checked = false;
+             document.getElementById('email-address').value = '';
+             document.getElementById('whatsapp-checkbox').checked = false;
+             document.getElementById('whatsapp-number').value = '';
+             document.getElementById('whatsapp-autopopulate-sms').checked = false;
         }
     } catch (error) {
         console.error("[Manager] Erro ao carregar preferências de notificação:", error);
     }
-    appInstance.editingNotificationPrefs = false; // Começa em modo de visualização
-    updateNotificationInputsState(appInstance); // Atualiza a UI com base nas prefs carregadas
+    appInstance.editingNotificationPrefs = false; 
+    updateNotificationInputsState(appInstance); 
 }
 
 async function saveNotificationPreferences(appInstance) {
@@ -166,19 +199,19 @@ async function saveNotificationPreferences(appInstance) {
         emailAddress: document.getElementById('email-address').value,
         whatsappEnabled: document.getElementById('whatsapp-checkbox').checked,
         whatsappNumber: document.getElementById('whatsapp-number').value,
+        whatsappAutopopulate: document.getElementById('whatsapp-autopopulate-sms').checked,
         lastUpdated: serverTimestamp()
     };
 
     const prefsRef = doc(db, `/artifacts/${appId}/users/${userId}/manager_preferences/notifications`);
     try {
-        await setDoc(prefsRef, prefs, { merge: true }); // merge: true para não sobrescrever outros campos se houver
+        await setDoc(prefsRef, prefs, { merge: true }); 
         showNotificationModal("Preferências de notificação salvas com sucesso!", "success");
     } catch (error) {
         console.error("[Manager] Erro ao salvar preferências de notificação:", error);
         showNotificationModal("Erro ao salvar preferências de notificação.", "error");
     }
 }
-
 
 export function loadAndDisplayComplaints(appInstance) {
     const loadingDiv = document.getElementById('complaints-loading');
@@ -199,7 +232,7 @@ export function loadAndDisplayComplaints(appInstance) {
 
     if (complaintsUnsubscribe) {
         complaintsUnsubscribe(); 
-        console.log("Listener de reclamações anterior cancelado.");
+        console.log("[Manager] Listener de reclamações anterior cancelado.");
     }
 
     if (!db) {
@@ -284,7 +317,7 @@ export function toggleEditNotificationPrefs(appInstance) {
         button.textContent = 'Editar Preferências';
         button.classList.remove('bg-green-500', 'hover:bg-green-600', 'dark:bg-green-600', 'dark:hover:bg-green-700');
         button.classList.add('bg-blue-500', 'hover:bg-blue-600', 'dark:bg-blue-600', 'dark:hover:bg-blue-700');
-        saveNotificationPreferences(appInstance);
+        saveNotificationPreferences(appInstance); 
     }
     updateNotificationInputsState(appInstance);
 }
@@ -336,9 +369,11 @@ export function handleWhatsappAutopopulate(appInstance) {
     const autopopulate = autopopulateCheckbox.checked;
     if (autopopulate && smsInput.value) {
         whatsappInput.value = smsInput.value;
+        whatsappInput.readOnly = true; // Mantém readOnly se autopopulado
+    } else if (appInstance.editingNotificationPrefs) { // Só permite edição se não autopopulado E estiver editando
+        whatsappInput.readOnly = false;
+    } else { // Bloqueado se não estiver editando
         whatsappInput.readOnly = true;
-    } else {
-        whatsappInput.readOnly = !appInstance.editingNotificationPrefs;
     }
 }
 

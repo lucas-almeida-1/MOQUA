@@ -1,4 +1,9 @@
-import { loadAndDisplayComplaints, stopListeningToComplaints, loadNotificationPreferences } from './manager.js'; 
+import { 
+    loadAndDisplayComplaints, 
+    stopListeningToComplaints, 
+    loadNotificationPreferences, 
+    renderManagerDashboard
+} from './manager.js'; 
 
 export function initTheme() {
     if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
@@ -37,7 +42,9 @@ export function showPage(pageId, appInstance) {
 
     // Para o listener de reclamações se estivermos saindo da página do gestor
     if (previousPage === 'manager-dashboard-page' && pageId !== 'manager-dashboard-page') {
-        stopListeningToComplaints();
+        if (typeof stopListeningToComplaints === 'function') { // Verifica se a função existe
+            stopListeningToComplaints();
+        }
     }
 
     if (pageId === 'dashboard-page' && appInstance) {
@@ -45,10 +52,11 @@ export function showPage(pageId, appInstance) {
     }
     
     if (pageId === 'manager-dashboard-page' && appInstance) {
-        appInstance.editingNotificationPrefs = false; // Garante que começa em modo de visualização
-        appInstance.renderManagerDashboard?.();  // Renderiza o básico do dashboard, incluindo o nome do gestor
-        loadNotificationPreferences(appInstance); // Carrega e aplica as preferências de notificação
-        loadAndDisplayComplaints(appInstance); // Inicia o listener de reclamações
+        appInstance.editingNotificationPrefs = false; 
+        // A função renderManagerDashboard agora também atualiza o nome do gestor.
+        if (typeof renderManagerDashboard === 'function') renderManagerDashboard(appInstance); 
+        if (typeof loadNotificationPreferences === 'function') loadNotificationPreferences(appInstance); 
+        if (typeof loadAndDisplayComplaints === 'function') loadAndDisplayComplaints(appInstance);
     }
 }
 
@@ -122,7 +130,9 @@ export function showNotificationModal(message, type = 'info') {
 
 export function goBack(appInstance, targetPage) {
     if (appInstance.currentPage === 'manager-dashboard-page' && targetPage !== 'manager-dashboard-page') {
-        stopListeningToComplaints();
+        if (typeof stopListeningToComplaints === 'function') {
+            stopListeningToComplaints();
+        }
     }
     if (targetPage === 'initial-page') { 
         appInstance.selectedUniversity = null; 

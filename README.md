@@ -13,7 +13,7 @@ Este é um projeto da disciplina de Engenharia de Software II e o principal moti
 No momento, o desenvolvimento do projeto está da seguinte forma:
 *   Documento reunindo a análise de requisitos - Alan Melo e Rafael Rocha
 *   Prototipação e desenvolvimento do produto - Lucas Almeida
-*   Material e apresentação em sala - Abner Mateus
+*   Material e apresentação em sala - Abner Mateus e Matheus Barretto
 *   Reuniões com cliente - Todos os membros
 
 ## Funcionalidades

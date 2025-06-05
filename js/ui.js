@@ -1,3 +1,5 @@
+import { loadAndDisplayComplaints, stopListeningToComplaints } from './manager.js'; 
+
 export function initTheme() {
     if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
         setTheme('dark');
@@ -21,6 +23,8 @@ export function setTheme(theme) {
 }
 
 export function showPage(pageId, appInstance) {
+    const previousPage = appInstance ? appInstance.currentPage : null;
+
     document.querySelectorAll('.page').forEach(page => page.classList.remove('active'));
     const targetPage = document.getElementById(pageId);
     if (targetPage) {
@@ -31,13 +35,21 @@ export function showPage(pageId, appInstance) {
     }
     window.scrollTo(0, 0);
 
+    // Para o listener de reclamações se estivermos saindo da página do gestor
+    if (previousPage === 'manager-dashboard-page' && pageId !== 'manager-dashboard-page') {
+        stopListeningToComplaints();
+    }
+
     if (pageId === 'dashboard-page' && appInstance) {
         appInstance.dashboardAlertShownForCurrentInstitute = false;
+        // A renderização do dashboard é chamada após selecionar o instituto/setor
     }
+    
     if (pageId === 'manager-dashboard-page' && appInstance) {
-        appInstance.editingNotificationPrefs = false;
-        appInstance.updateNotificationInputsState?.(); // Call if exists
-        appInstance.renderManagerDashboard?.(); // Call if exists
+        appInstance.editingNotificationPrefs = false; 
+        appInstance.updateNotificationInputsState?.(); 
+        appInstance.renderManagerDashboard?.(); 
+        loadAndDisplayComplaints(appInstance); // Inicia o listener de reclamações
     }
 }
 
@@ -77,10 +89,17 @@ export function showErrorPopup(fieldId, message, errorPopupTimeouts) {
         errorElement.textContent = message;
         errorElement.classList.add('show');
 
-        if (errorPopupTimeouts[fieldId]) clearTimeout(errorPopupTimeouts[fieldId]);
-        errorPopupTimeouts[fieldId] = setTimeout(() => {
-            errorElement.classList.remove('show');
-        }, 4000);
+        if (errorPopupTimeouts && errorPopupTimeouts[fieldId]) clearTimeout(errorPopupTimeouts[fieldId]);
+        
+        if(errorPopupTimeouts){ // Check if errorPopupTimeouts is defined
+            errorPopupTimeouts[fieldId] = setTimeout(() => {
+                errorElement.classList.remove('show');
+            }, 4000);
+        } else { // Fallback if errorPopupTimeouts is not passed or undefined
+             setTimeout(() => {
+                errorElement.classList.remove('show');
+            }, 4000);
+        }
     }
 }
 
@@ -103,6 +122,9 @@ export function showNotificationModal(message, type = 'info') {
 }
 
 export function goBack(appInstance, targetPage) {
+    if (appInstance.currentPage === 'manager-dashboard-page' && targetPage !== 'manager-dashboard-page') {
+        stopListeningToComplaints();
+    }
     if (targetPage === 'initial-page') { 
         appInstance.selectedUniversity = null; 
         appInstance.selectedInstituteSector = null; 

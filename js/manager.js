@@ -1,9 +1,22 @@
 import { showPage, showErrorPopup, showNotificationModal } from './ui.js';
-import { geminiApiKey } from './config.js'; // Import Gemini API Key
+import { geminiApiKey } from './config.js';
+import { 
+    auth, 
+    signInWithEmailAndPassword, 
+    signOut,
+    db, 
+    collection, 
+    query, 
+    orderBy, 
+    onSnapshot 
+} from './firebase.js';
+import { appId } from './config.js';
 
-const { jsPDF } = window.jspdf; // jsPDF is loaded globally
+const { jsPDF } = window.jspdf; // jsPDF é carregado globalmente
 
-export function handleLogin(event, appInstance) {
+let complaintsUnsubscribe = null; // Para gerenciar o listener de reclamações
+
+export async function handleLogin(event, appInstance) {
     event.preventDefault();
     const form = event.target;
     const email = form.elements['email'].value.trim();
@@ -23,17 +36,54 @@ export function handleLogin(event, appInstance) {
     
     if (!isValid) return;
 
-    const managerName = email.split('@')[0].replace(/\./g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+    if (!auth) {
+        showNotificationModal('Serviço de autenticação não está disponível. Verifique a conexão com o Firebase.', 'error');
+        return;
+    }
 
-    if (email === 'gestor@ufba.br' && password === 'senha123') {
-        const managerWelcomeName = document.getElementById('manager-welcome-name');
-        if(managerWelcomeName) managerWelcomeName.textContent = managerName || "Gestor";
-        showPage('manager-dashboard-page', appInstance);
-        // renderManagerDashboard is called by showPage if pageId is manager-dashboard-page
-    } else {
-        showNotificationModal('Email ou senha inválidos.', 'error');
+    try {
+        const userCredential = await signInWithEmailAndPassword(auth, email, password);
+        const user = userCredential.user;
+        console.log("Login bem-sucedido para:", user.email);
+        
+        const managerName = user.email ? user.email.split('@')[0].replace(/\./g, ' ').replace(/\b\w/g, l => l.toUpperCase()) : "Gestor";
+        const managerWelcomeNameEl = document.getElementById('manager-welcome-name');
+        if (managerWelcomeNameEl) managerWelcomeNameEl.textContent = managerName;
+        
+        showNotificationModal('Login bem-sucedido! Redirecionando...', 'success');
+        showPage('manager-dashboard-page', appInstance); 
+        // renderManagerDashboard e loadAndDisplayComplaints são chamados por showPage
+    } catch (error) {
+        console.error("Erro no login:", error);
+        let errorMessage = "Falha no login. Verifique suas credenciais.";
+        if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
+            errorMessage = "Email ou senha inválidos.";
+        } else if (error.code === 'auth/invalid-email') {
+            errorMessage = "O formato do email é inválido.";
+        }
+        showNotificationModal(errorMessage, 'error');
     }
 }
+
+export async function handleLogout(appInstance) {
+    if (!auth) {
+        showNotificationModal('Serviço de autenticação não disponível.', 'error');
+        showPage('login-page', appInstance); // Mesmo com erro, leva para login
+        return;
+    }
+    try {
+        await signOut(auth);
+        console.log("Logout bem-sucedido.");
+        appInstance.lastAiAnalysisText = null; // Limpa análise de IA ao sair
+        showNotificationModal("Logout realizado com sucesso.", "info");
+        stopListeningToComplaints(); // Para o listener de reclamações
+        showPage('login-page', appInstance);
+    } catch (error) {
+        console.error("Erro ao fazer logout:", error);
+        showNotificationModal("Erro ao tentar fazer logout.", "error");
+    }
+}
+
 
 export function renderManagerDashboard(appInstance) {
     const overviewContainer = document.getElementById('manager-realtime-data');
@@ -43,8 +93,8 @@ export function renderManagerDashboard(appInstance) {
     let attentionCount = 0;
     let goodCount = 0;
 
-    if (appInstance.selectedInstituteSector && appInstance.selectedInstituteSector.locations.length > 0) {
-        appInstance.selectedInstituteSector.locations.forEach(loc => {
+    if (appInstance.selectedInstituteSector && appInstance.selectedInstituteSector.locations && appInstance.selectedInstituteSector.locations.length > 0) {
+        appInstance.selectedInstituteSector.locations.forEach(loc => { 
             if (loc.status === 'critical') {
                 overviewContainer.innerHTML += `<p class="text-red-600 dark:text-red-400">🔴 <strong>CRÍTICO:</strong> ${loc.name} (${loc.type})</p>`;
                 criticalCount++;
@@ -55,22 +105,117 @@ export function renderManagerDashboard(appInstance) {
                 goodCount++;
             }
         });
-        if (goodCount > 0 && (criticalCount > 0 || attentionCount > 0)) {
+        if (goodCount > 0 && (criticalCount > 0 || attentionCount > 0)) { // Só mostra contagem de "BOM" se houver outros status
              overviewContainer.innerHTML += `<p class="text-green-600 dark:text-green-400">✅ ${goodCount} outro(s) ponto(s) com qualidade BOA.</p>`;
         }
-        if (criticalCount === 0 && attentionCount === 0 && goodCount === 0) {
-             overviewContainer.innerHTML = '<p>Nenhum dado de ponto de coleta para este setor.</p>';
+        if (criticalCount === 0 && attentionCount === 0 && goodCount === 0 && appInstance.selectedInstituteSector.locations.length === 0) {
+             overviewContainer.innerHTML = '<p>Nenhum ponto de coleta cadastrado para este setor.</p>';
         } else if (criticalCount === 0 && attentionCount === 0 && goodCount > 0) {
              overviewContainer.innerHTML = `<p class="text-green-600 dark:text-green-400">✅ Todos os ${goodCount} ponto(s) de coleta estão com qualidade BOA.</p>`;
+        } else if (criticalCount === 0 && attentionCount === 0 && goodCount === 0) { // Caso locations exista mas esteja vazio após filtros (boas práticas)
+            overviewContainer.innerHTML = '<p>Nenhum dado de ponto de coleta para exibir com os filtros atuais.</p>';
         }
     } else {
-        overviewContainer.innerHTML = '<p>Nenhum dado de setor selecionado para exibir.</p>';
+        overviewContainer.innerHTML = '<p>Nenhum setor selecionado ou setor sem pontos de coleta cadastrados.</p>';
     }
-    const aiAnalysisResult = document.getElementById('ai-analysis-result');
-    if (aiAnalysisResult) aiAnalysisResult.innerHTML = ''; // Clear previous AI analysis
-    updateNotificationInputsState(appInstance); // Ensure correct state of notification inputs
+    const aiResultDiv = document.getElementById('ai-analysis-result');
+    if(aiResultDiv) aiResultDiv.innerHTML = ''; 
+    // updateNotificationInputsState é chamado em showPage
 }
 
+export function loadAndDisplayComplaints(appInstance) {
+    const loadingDiv = document.getElementById('complaints-loading');
+    const listContainer = document.getElementById('complaints-list-container');
+    const tableBody = document.getElementById('complaints-table-body');
+    const noComplaintsMessage = document.getElementById('no-complaints-message');
+    const complaintsTable = listContainer ? listContainer.querySelector('table') : null;
+
+    if (!loadingDiv || !listContainer || !tableBody || !noComplaintsMessage || !complaintsTable) {
+        console.error("Elementos da UI para reclamações não encontrados.");
+        return;
+    }
+
+    loadingDiv.style.display = 'block';
+    tableBody.innerHTML = ''; 
+    complaintsTable.classList.add('hidden');
+    noComplaintsMessage.classList.add('hidden');
+
+    if (complaintsUnsubscribe) {
+        complaintsUnsubscribe(); 
+        console.log("Listener de reclamações anterior cancelado.");
+    }
+
+    if (!db) {
+        console.error("Firestore DB não inicializado.");
+        loadingDiv.textContent = "Erro ao conectar com o banco de dados.";
+        return;
+    }
+
+    const complaintsRef = collection(db, `/artifacts/${appId}/public/data/water_quality_complaints`);
+    const q = query(complaintsRef, orderBy("timestamp", "desc")); 
+
+    console.log(`[Manager] Escutando coleção: /artifacts/${appId}/public/data/water_quality_complaints`);
+
+    complaintsUnsubscribe = onSnapshot(q, (querySnapshot) => {
+        loadingDiv.style.display = 'none';
+        tableBody.innerHTML = ''; 
+
+        if (querySnapshot.empty) {
+            complaintsTable.classList.add('hidden');
+            noComplaintsMessage.classList.remove('hidden');
+            console.log("[Manager] Nenhuma reclamação encontrada.");
+        } else {
+            complaintsTable.classList.remove('hidden');
+            noComplaintsMessage.classList.add('hidden');
+            querySnapshot.forEach((doc) => {
+                const complaint = doc.data();
+                const tr = document.createElement('tr');
+                tr.classList.add('hover:bg-gray-50', 'dark:hover:bg-gray-700');
+
+                const date = complaint.timestamp ? new Date(complaint.timestamp.seconds * 1000).toLocaleString('pt-BR') : 'N/A';
+                const userIdentifier = complaint.identifyUser ? 
+                    `${complaint.userName || ''} ${complaint.userMatricula ? '('+complaint.userMatricula+')' : ''}`.trim() 
+                    : 'Anônimo';
+
+                tr.innerHTML = `
+                    <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">${date}</td>
+                    <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-700 dark:text-gray-200">${complaint.instituteSectorName || 'N/A'}</td>
+                    <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-700 dark:text-gray-200">${complaint.locationType || 'N/A'}</td>
+                    <td class="px-4 py-3 text-sm text-gray-700 dark:text-gray-200 max-w-xs truncate" title="${complaint.description}">${complaint.description || 'N/A'}</td>
+                    <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-700 dark:text-gray-200">${userIdentifier}</td>
+                    <td class="px-4 py-3 whitespace-nowrap text-sm">
+                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+                            ${complaint.status === 'new' ? 'bg-blue-100 text-blue-800 dark:bg-blue-700 dark:text-blue-100' : 
+                            complaint.status === 'in_progress' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-700 dark:text-yellow-100' :
+                            complaint.status === 'resolved' ? 'bg-green-100 text-green-800 dark:bg-green-700 dark:text-green-100' :
+                            'bg-gray-100 text-gray-800 dark:bg-gray-600 dark:text-gray-100'}">
+                            ${complaint.status ? complaint.status.replace('_', ' ').toUpperCase() : 'N/A'}
+                        </span>
+                    </td>
+                `;
+                tableBody.appendChild(tr);
+            });
+            console.log(`[Manager] ${querySnapshot.size} reclamações carregadas e renderizadas.`);
+        }
+    }, (error) => {
+        console.error("[Manager] Erro ao buscar reclamações: ", error);
+        loadingDiv.textContent = "Erro ao carregar reclamações.";
+        noComplaintsMessage.classList.remove('hidden');
+        noComplaintsMessage.textContent = "Não foi possível carregar as reclamações.";
+        complaintsTable.classList.add('hidden');
+    });
+}
+
+export function stopListeningToComplaints() {
+    if (complaintsUnsubscribe) {
+        complaintsUnsubscribe();
+        complaintsUnsubscribe = null; 
+        console.log("[Manager] Listener de reclamações parado.");
+    }
+}
+
+
+// Funções de Configuração de Notificação e Análise com IA
 export function toggleEditNotificationPrefs(appInstance) {
     appInstance.editingNotificationPrefs = !appInstance.editingNotificationPrefs;
     const button = document.getElementById('edit-notification-prefs-btn');
@@ -164,9 +309,8 @@ export async function analyzeSituationWithAI(appInstance, forceGeneration = fals
     aiButton.disabled = true;
     resultDiv.innerHTML = '<div class="loading-spinner"></div><p class="text-center dark:text-gray-300">Processando...</p>';
     
-    // Use the imported geminiApiKey
     if (!geminiApiKey) {
-        console.error("Gemini API Key is missing. AI analysis cannot proceed.");
+        console.error("Chave da API Gemini não configurada.");
         resultDiv.innerHTML = `<p class="text-red-500 dark:text-red-400">Erro: Chave da API Gemini não configurada.</p>`;
         aiButton.innerHTML = originalButtonHTML;
         aiButton.disabled = false;
@@ -340,5 +484,5 @@ export function setupManagerEventListeners(appInstance) {
     if (downloadPdfBtn) downloadPdfBtn.addEventListener('click', () => downloadPdf(appInstance));
 
     const managerLogoutBtn = document.getElementById('manager-logout-btn');
-    if (managerLogoutBtn) managerLogoutBtn.addEventListener('click', () => showPage('login-page', appInstance));
+    if (managerLogoutBtn) managerLogoutBtn.addEventListener('click', () => handleLogout(appInstance)); // Alterado para handleLogout
 }

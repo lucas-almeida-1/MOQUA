@@ -176,10 +176,7 @@
         .required-asterisk-display {
             color: red;
         }
-        /* Ensure filter options are initially hidden if JS is disabled, then JS will show them */
-        #filter-options { display: none; }
-        #filter-options.active { display: grid; } /* Or 'flex' if that's the layout */
-
+        #filter-options { display: grid; } 
     </style>
     <!-- Load auto-generated environment config first -->
     <script src="js/env-config.js"></script> 
@@ -246,14 +243,16 @@
             </div>
             <header class="mb-6 text-center"> <h2 id="dashboard-title" class="text-3xl font-bold text-indigo-700 dark:text-indigo-300">Dashboard</h2> </header>
             
-            <!-- Filtro Section -->
             <div class="mb-6 bg-white dark:bg-dark-card p-4 rounded-lg shadow">
                 <div class="flex items-center mb-3">
                     <h3 class="text-lg font-semibold text-gray-700 dark:text-gray-200 mr-4">Filtro</h3>
                     <input type="text" id="filter-name-dashboard" placeholder="🔎 Filtrar por nome do local..." class="flex-grow p-2 border border-gray-300 dark:border-dark-border rounded-md bg-white dark:bg-gray-700 focus:ring-indigo-500 dark:focus:ring-indigo-400 focus:border-indigo-500 dark:focus:border-indigo-400 text-sm">
-                    <!-- Toggle button removed, clear button takes its place if needed or is part of expanded -->
+                    <button id="clear-filters-btn" title="Limpar Filtros" class="ml-2 p-2 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-500 bg-gray-100 dark:bg-gray-600 rounded-md flex items-center justify-center text-sm">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-1"><polyline points="23 4 1 4 10 12.46 10 19 14 21 14 12.46 23 4"></polyline><line x1="1" y1="4" x2="23" y2="4"></line></svg>
+                        Limpar Filtragem
+                    </button>
                 </div>
-                <div id="filter-options" class="space-y-3 sm:space-y-0 sm:grid sm:grid-cols-3 sm:gap-4 pt-3 border-t border-gray-200 dark:border-gray-700">
+                <div id="filter-options" class="space-y-3 sm:space-y-0 sm:grid sm:grid-cols-2 sm:gap-4 pt-3 border-t border-gray-200 dark:border-gray-700"> 
                     <div id="filter-type">
                         <p class="font-medium text-sm text-gray-700 dark:text-gray-300 mb-1">Tipo:</p>
                         <label class="inline-flex items-center mr-2"><input type="checkbox" value="Bebedouro" class="form-checkbox rounded text-indigo-600 dark:text-indigo-400"> <span class="ml-1 text-sm">Bebedouro</span></label>
@@ -265,12 +264,6 @@
                         <label class="inline-flex items-center mr-2"><input type="checkbox" value="good" class="form-checkbox rounded text-green-500"> <span class="ml-1 text-sm">Boa</span></label>
                         <label class="inline-flex items-center mr-2"><input type="checkbox" value="attention" class="form-checkbox rounded text-yellow-500"> <span class="ml-1 text-sm">Atenção</span></label>
                         <label class="inline-flex items-center"><input type="checkbox" value="critical" class="form-checkbox rounded text-red-500"> <span class="ml-1 text-sm">Crítica</span></label>
-                    </div>
-                    <div class="flex items-end">
-                        <button id="clear-filters-btn" title="Limpar Filtros" class="w-full sm:w-auto p-2 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-500 bg-gray-100 dark:bg-gray-600 rounded-md flex items-center justify-center text-sm">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-1"><polyline points="23 4 1 4 10 12.46 10 19 14 21 14 12.46 23 4"></polyline><line x1="1" y1="4" x2="23" y2="4"></line></svg>
-                            Limpar Filtragem
-                        </button>
                     </div>
                 </div>
             </div>
@@ -298,7 +291,6 @@
                         <label for="password" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Senha <span class="required-asterisk-display">*</span></label>
                         <div class="relative mt-1">
                             <input type="password" id="password" name="password" required class="block w-full p-3 border border-gray-300 dark:border-dark-border rounded-md shadow-sm focus:ring-indigo-500 dark:focus:ring-indigo-400 focus:border-indigo-500 dark:focus:border-indigo-400 bg-white dark:bg-gray-700">
-                            <!-- Password toggle icon removed -->
                         </div>
                         <div id="password-login-error-popup" class="form-error-popup"></div>
                     </div>
@@ -326,6 +318,34 @@
                 <h2 class="text-3xl font-bold text-purple-700 dark:text-purple-300">Painel do Gestor</h2>
                 <p class="text-gray-600 dark:text-gray-300">Bem-vindo, <span id="manager-welcome-name"></span>.</p>
             </header>
+
+            <!-- Card de Reclamações -->
+            <div class="mb-8 bg-white dark:bg-dark-card p-6 rounded-lg shadow-lg">
+                <h3 class="text-xl font-semibold text-purple-600 dark:text-purple-400 mb-4">Reclamações Recebidas Recentemente</h3>
+                <div id="complaints-loading" class="text-center dark:text-gray-300">
+                    <p>Carregando reclamações...</p>
+                    <div class="loading-spinner mx-auto mt-2"></div>
+                </div>
+                <div id="complaints-list-container" class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700 hidden">
+                        <thead class="bg-gray-50 dark:bg-gray-800">
+                            <tr>
+                                <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Data</th>
+                                <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Setor</th>
+                                <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Tipo Local</th>
+                                <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Descrição</th>
+                                <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Usuário</th>
+                                <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="complaints-table-body" class="bg-white dark:bg-dark-card divide-y divide-gray-200 dark:divide-gray-600">
+                            <!-- Linhas da tabela (<tr>) serão adicionadas aqui -->
+                        </tbody>
+                    </table>
+                    <p id="no-complaints-message" class="text-center text-gray-500 dark:text-gray-400 hidden">Nenhuma reclamação encontrada.</p>
+                </div>
+            </div>
+
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div class="bg-white dark:bg-dark-card p-6 rounded-lg shadow-lg">
                     <h3 class="text-xl font-semibold text-purple-600 dark:text-purple-400 mb-4">Visão Geral dos Dados - Tempo Real</h3>

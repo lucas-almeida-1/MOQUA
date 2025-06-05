@@ -8,13 +8,15 @@ import {
     collection, 
     query, 
     orderBy, 
-    onSnapshot 
+    onSnapshot,
+    doc,
+    setDoc,
+    getDoc
 } from './firebase.js';
 import { appId } from './config.js';
 
-const { jsPDF } = window.jspdf; // jsPDF é carregado globalmente
-
-let complaintsUnsubscribe = null; // Para gerenciar o listener de reclamações
+const { jsPDF } = window.jspdf; 
+let complaintsUnsubscribe = null; 
 
 export async function handleLogin(event, appInstance) {
     event.preventDefault();
@@ -37,22 +39,15 @@ export async function handleLogin(event, appInstance) {
     if (!isValid) return;
 
     if (!auth) {
-        showNotificationModal('Serviço de autenticação não está disponível. Verifique a conexão com o Firebase.', 'error');
+        showNotificationModal('Serviço de autenticação não está disponível.', 'error');
         return;
     }
 
     try {
         const userCredential = await signInWithEmailAndPassword(auth, email, password);
-        const user = userCredential.user;
-        console.log("Login bem-sucedido para:", user.email);
-        
-        const managerName = user.email ? user.email.split('@')[0].replace(/\./g, ' ').replace(/\b\w/g, l => l.toUpperCase()) : "Gestor";
-        const managerWelcomeNameEl = document.getElementById('manager-welcome-name');
-        if (managerWelcomeNameEl) managerWelcomeNameEl.textContent = managerName;
-        
+        // onAuthStateChanged em firebase.js cuidará da atualização do nome e redirecionamento
         showNotificationModal('Login bem-sucedido! Redirecionando...', 'success');
-        showPage('manager-dashboard-page', appInstance); 
-        // renderManagerDashboard e loadAndDisplayComplaints são chamados por showPage
+        // O showPage será chamado pelo onAuthStateChanged se o login for bem-sucedido e o usuário ainda estiver na página de login.
     } catch (error) {
         console.error("Erro no login:", error);
         let errorMessage = "Falha no login. Verifique suas credenciais.";
@@ -68,22 +63,21 @@ export async function handleLogin(event, appInstance) {
 export async function handleLogout(appInstance) {
     if (!auth) {
         showNotificationModal('Serviço de autenticação não disponível.', 'error');
-        showPage('login-page', appInstance); // Mesmo com erro, leva para login
+        showPage('login-page', appInstance); 
         return;
     }
     try {
         await signOut(auth);
         console.log("Logout bem-sucedido.");
-        appInstance.lastAiAnalysisText = null; // Limpa análise de IA ao sair
+        appInstance.lastAiAnalysisText = null; 
         showNotificationModal("Logout realizado com sucesso.", "info");
-        stopListeningToComplaints(); // Para o listener de reclamações
+        stopListeningToComplaints(); 
         showPage('login-page', appInstance);
     } catch (error) {
         console.error("Erro ao fazer logout:", error);
         showNotificationModal("Erro ao tentar fazer logout.", "error");
     }
 }
-
 
 export function renderManagerDashboard(appInstance) {
     const overviewContainer = document.getElementById('manager-realtime-data');
@@ -92,6 +86,13 @@ export function renderManagerDashboard(appInstance) {
     let criticalCount = 0;
     let attentionCount = 0;
     let goodCount = 0;
+
+    // Atualiza o nome do gestor usando os detalhes do usuário do Firebase
+    const userDetails = appInstance.currentUserId() ? appInstance.auth.currentUser : null; // Re-check current user from auth
+    const managerName = userDetails?.displayName || (userDetails?.email ? userDetails.email.split('@')[0].replace(/\./g, ' ').replace(/\b\w/g, l => l.toUpperCase()) : "Gestor");
+    const managerWelcomeNameEl = document.getElementById('manager-welcome-name');
+    if (managerWelcomeNameEl) managerWelcomeNameEl.textContent = managerName;
+
 
     if (appInstance.selectedInstituteSector && appInstance.selectedInstituteSector.locations && appInstance.selectedInstituteSector.locations.length > 0) {
         appInstance.selectedInstituteSector.locations.forEach(loc => { 
@@ -105,14 +106,14 @@ export function renderManagerDashboard(appInstance) {
                 goodCount++;
             }
         });
-        if (goodCount > 0 && (criticalCount > 0 || attentionCount > 0)) { // Só mostra contagem de "BOM" se houver outros status
+        if (goodCount > 0 && (criticalCount > 0 || attentionCount > 0)) { 
              overviewContainer.innerHTML += `<p class="text-green-600 dark:text-green-400">✅ ${goodCount} outro(s) ponto(s) com qualidade BOA.</p>`;
         }
         if (criticalCount === 0 && attentionCount === 0 && goodCount === 0 && appInstance.selectedInstituteSector.locations.length === 0) {
              overviewContainer.innerHTML = '<p>Nenhum ponto de coleta cadastrado para este setor.</p>';
         } else if (criticalCount === 0 && attentionCount === 0 && goodCount > 0) {
              overviewContainer.innerHTML = `<p class="text-green-600 dark:text-green-400">✅ Todos os ${goodCount} ponto(s) de coleta estão com qualidade BOA.</p>`;
-        } else if (criticalCount === 0 && attentionCount === 0 && goodCount === 0) { // Caso locations exista mas esteja vazio após filtros (boas práticas)
+        } else if (criticalCount === 0 && attentionCount === 0 && goodCount === 0 && appInstance.selectedInstituteSector.locations.length > 0) { 
             overviewContainer.innerHTML = '<p>Nenhum dado de ponto de coleta para exibir com os filtros atuais.</p>';
         }
     } else {
@@ -120,8 +121,64 @@ export function renderManagerDashboard(appInstance) {
     }
     const aiResultDiv = document.getElementById('ai-analysis-result');
     if(aiResultDiv) aiResultDiv.innerHTML = ''; 
-    // updateNotificationInputsState é chamado em showPage
+    
+    loadNotificationPreferences(appInstance); // Carrega as preferências ao renderizar o dashboard
 }
+
+export async function loadNotificationPreferences(appInstance) {
+    const userId = appInstance.currentUserId();
+    if (!userId || !db) return;
+
+    const prefsRef = doc(db, `/artifacts/${appId}/users/${userId}/manager_preferences/notifications`);
+    try {
+        const docSnap = await getDoc(prefsRef);
+        if (docSnap.exists()) {
+            const prefs = docSnap.data();
+            document.getElementById('sms-checkbox').checked = prefs.smsEnabled || false;
+            document.getElementById('sms-number').value = prefs.smsNumber || '';
+            document.getElementById('email-checkbox').checked = prefs.emailEnabled || false;
+            document.getElementById('email-address').value = prefs.emailAddress || '';
+            document.getElementById('whatsapp-checkbox').checked = prefs.whatsappEnabled || false;
+            document.getElementById('whatsapp-number').value = prefs.whatsappNumber || '';
+            console.log("[Manager] Preferências de notificação carregadas.");
+        } else {
+            console.log("[Manager] Nenhuma preferência de notificação encontrada para o gestor. Usando padrões.");
+            // Deixar os campos como estão (desmarcado/vazio)
+        }
+    } catch (error) {
+        console.error("[Manager] Erro ao carregar preferências de notificação:", error);
+    }
+    appInstance.editingNotificationPrefs = false; // Começa em modo de visualização
+    updateNotificationInputsState(appInstance); // Atualiza a UI com base nas prefs carregadas
+}
+
+async function saveNotificationPreferences(appInstance) {
+    const userId = appInstance.currentUserId();
+    if (!userId || !db) {
+        showNotificationModal("Não foi possível salvar as preferências. Usuário não autenticado ou falha na conexão.", "error");
+        return;
+    }
+
+    const prefs = {
+        smsEnabled: document.getElementById('sms-checkbox').checked,
+        smsNumber: document.getElementById('sms-number').value,
+        emailEnabled: document.getElementById('email-checkbox').checked,
+        emailAddress: document.getElementById('email-address').value,
+        whatsappEnabled: document.getElementById('whatsapp-checkbox').checked,
+        whatsappNumber: document.getElementById('whatsapp-number').value,
+        lastUpdated: serverTimestamp()
+    };
+
+    const prefsRef = doc(db, `/artifacts/${appId}/users/${userId}/manager_preferences/notifications`);
+    try {
+        await setDoc(prefsRef, prefs, { merge: true }); // merge: true para não sobrescrever outros campos se houver
+        showNotificationModal("Preferências de notificação salvas com sucesso!", "success");
+    } catch (error) {
+        console.error("[Manager] Erro ao salvar preferências de notificação:", error);
+        showNotificationModal("Erro ao salvar preferências de notificação.", "error");
+    }
+}
+
 
 export function loadAndDisplayComplaints(appInstance) {
     const loadingDiv = document.getElementById('complaints-loading');
@@ -214,8 +271,6 @@ export function stopListeningToComplaints() {
     }
 }
 
-
-// Funções de Configuração de Notificação e Análise com IA
 export function toggleEditNotificationPrefs(appInstance) {
     appInstance.editingNotificationPrefs = !appInstance.editingNotificationPrefs;
     const button = document.getElementById('edit-notification-prefs-btn');
@@ -229,7 +284,7 @@ export function toggleEditNotificationPrefs(appInstance) {
         button.textContent = 'Editar Preferências';
         button.classList.remove('bg-green-500', 'hover:bg-green-600', 'dark:bg-green-600', 'dark:hover:bg-green-700');
         button.classList.add('bg-blue-500', 'hover:bg-blue-600', 'dark:bg-blue-600', 'dark:hover:bg-blue-700');
-        showNotificationModal("Preferências de notificação salvas (simulação).", "success");
+        saveNotificationPreferences(appInstance);
     }
     updateNotificationInputsState(appInstance);
 }
@@ -484,5 +539,5 @@ export function setupManagerEventListeners(appInstance) {
     if (downloadPdfBtn) downloadPdfBtn.addEventListener('click', () => downloadPdf(appInstance));
 
     const managerLogoutBtn = document.getElementById('manager-logout-btn');
-    if (managerLogoutBtn) managerLogoutBtn.addEventListener('click', () => handleLogout(appInstance)); // Alterado para handleLogout
+    if (managerLogoutBtn) managerLogoutBtn.addEventListener('click', () => handleLogout(appInstance)); 
 }

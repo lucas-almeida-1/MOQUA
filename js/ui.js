@@ -1,4 +1,4 @@
-import { loadAndDisplayComplaints, stopListeningToComplaints } from './manager.js'; 
+import { loadAndDisplayComplaints, stopListeningToComplaints, loadNotificationPreferences } from './manager.js'; 
 
 export function initTheme() {
     if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
@@ -30,7 +30,7 @@ export function showPage(pageId, appInstance) {
     if (targetPage) {
         targetPage.classList.add('active');
     }
-    if (appInstance) {
+    if (appInstance) { 
         appInstance.currentPage = pageId;
     }
     window.scrollTo(0, 0);
@@ -42,13 +42,12 @@ export function showPage(pageId, appInstance) {
 
     if (pageId === 'dashboard-page' && appInstance) {
         appInstance.dashboardAlertShownForCurrentInstitute = false;
-        // A renderização do dashboard é chamada após selecionar o instituto/setor
     }
     
     if (pageId === 'manager-dashboard-page' && appInstance) {
-        appInstance.editingNotificationPrefs = false; 
-        appInstance.updateNotificationInputsState?.(); 
-        appInstance.renderManagerDashboard?.(); 
+        appInstance.editingNotificationPrefs = false; // Garante que começa em modo de visualização
+        appInstance.renderManagerDashboard?.();  // Renderiza o básico do dashboard, incluindo o nome do gestor
+        loadNotificationPreferences(appInstance); // Carrega e aplica as preferências de notificação
         loadAndDisplayComplaints(appInstance); // Inicia o listener de reclamações
     }
 }
@@ -91,11 +90,11 @@ export function showErrorPopup(fieldId, message, errorPopupTimeouts) {
 
         if (errorPopupTimeouts && errorPopupTimeouts[fieldId]) clearTimeout(errorPopupTimeouts[fieldId]);
         
-        if(errorPopupTimeouts){ // Check if errorPopupTimeouts is defined
+        if(errorPopupTimeouts){ 
             errorPopupTimeouts[fieldId] = setTimeout(() => {
                 errorElement.classList.remove('show');
             }, 4000);
-        } else { // Fallback if errorPopupTimeouts is not passed or undefined
+        } else { 
              setTimeout(() => {
                 errorElement.classList.remove('show');
             }, 4000);

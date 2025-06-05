@@ -3,12 +3,12 @@ import {
     auth as firebaseAuth, 
     getCurrentUserId, 
     app as firebaseApp, 
-    authReadyPromise, // Import the promise
-    // START: Importação para criação de usuário
-    // Adicione as duas funções abaixo para criar e atualizar o usuário
+    authReadyPromise,
     signInWithEmailAndPassword, 
-    updateProfile 
-    // END: Importação para criação de usuário
+    updateProfile,
+    // NOVO: Importe 'doc' e 'setDoc' para interagir com o Firestore
+    doc,
+    setDoc
 } from './firebase.js';
 import { initTheme, setTheme, showPage as displayPage, setupModalEventListeners, goBack as navigateBack } from './ui.js';
 import { 
@@ -23,13 +23,13 @@ import {
 } from './dashboard.js';
 import { setupComplaintFormEventListeners, resetComplaintModal as resetComplaint } from './complaint.js';
 import { setupManagerEventListeners, renderManagerDashboard as renderManagerDash, updateNotificationInputsState as updateManagerInputs } from './manager.js';
+import { appId } from './config.js'; // NOVO: Importe o appId para usar nos caminhos do Firestore
 
 
-// START: Função para criar usuário gestor padrão
-// Esta função cria o usuário gestor se ele não existir.
-async function setupDefaultManagerUser(auth) {
-    if (!auth) {
-        console.warn("Setup Gestor: Serviço de autenticação não disponível.");
+// FUNÇÃO ATUALIZADA: Agora também cria o documento no Firestore
+async function setupDefaultManagerUser(auth, db) {
+    if (!auth || !db) {
+        console.warn("Setup Gestor: Serviço de autenticação ou Firestore não disponível.");
         return;
     }
 
@@ -38,25 +38,34 @@ async function setupDefaultManagerUser(auth) {
     const displayName = "Lucas";
 
     try {
-        // Tenta fazer o login primeiro para não recriar a senha ou gerar erro.
-        // Se o login funcionar, o usuário já existe.
         await signInWithEmailAndPassword(auth, email, password);
         console.log(`Usuário gestor (${email}) já existe e o login foi verificado.`);
     } catch (loginError) {
-        // Se o erro for 'auth/invalid-credential', significa que o usuário não existe ou a senha está errada.
-        // Para este script, assumimos que se o login falhar, devemos tentar criar.
         if (loginError.code === 'auth/invalid-credential' || loginError.code === 'auth/user-not-found') {
             console.log(`Usuário gestor (${email}) não encontrado. Tentando criar...`);
             try {
+                // 1. Cria o usuário na Autenticação
                 const userCredential = await auth.createUserWithEmailAndPassword(email, password);
-                console.log("Usuário gestor criado com sucesso:", userCredential.user.uid);
+                const user = userCredential.user;
+                console.log("Usuário gestor criado na Autenticação:", user.uid);
                 
-                await updateProfile(userCredential.user, {
+                // 2. Atualiza o perfil na Autenticação (com o nome)
+                await updateProfile(user, {
                     displayName: displayName
                 });
                 console.log("Perfil do gestor atualizado com o nome:", displayName);
+
+                // 3. NOVO: Cria o documento do usuário no Firestore
+                const userDocRef = doc(db, `artifacts/${appId}/users/${user.uid}`);
+                await setDoc(userDocRef, {
+                    email: user.email,
+                    displayName: user.displayName,
+                    role: 'manager',
+                    createdAt: new Date() // Usamos new Date() para simplicidade
+                });
+                console.log("Documento do gestor criado no Firestore com sucesso!");
+
             } catch (creationError) {
-                 // Caso o e-mail exista, mas a senha no script seja diferente da do Firebase
                 if (creationError.code === 'auth/email-already-in-use') {
                     console.warn(`O email do gestor (${email}) já existe, mas a senha no script está incorreta. Nenhuma ação será tomada.`);
                 } else {
@@ -68,7 +77,6 @@ async function setupDefaultManagerUser(auth) {
         }
     }
 }
-// END: Função para criar usuário gestor padrão
 
 
 window.App = {
@@ -159,18 +167,15 @@ window.App = {
     // Manager Methods
     renderManagerDashboard: function() { renderManagerDash(this); },
     updateNotificationInputsState: function() { updateManagerInputs(this); },
-    // analyzeSituationWithAI, generateAndShowPdf, downloadPdf are called from manager.js setupManagerEventListeners
 
 };
 
 window.addEventListener('DOMContentLoaded', async () => {
     try {
-        await authReadyPromise; // Wait for Firebase auth to be ready
+        await authReadyPromise; 
         
-        // START: Chamada da função para criar usuário
-        // Executa a função de setup após a autenticação estar pronta
-        await setupDefaultManagerUser(firebaseAuth);
-        // END: Chamada da função para criar usuário
+        // ATUALIZADO: Passa o 'firestoreDB' para a função
+        await setupDefaultManagerUser(firebaseAuth, firestoreDB);
 
         if (firebaseApp) { 
             App.init();
@@ -223,4 +228,10 @@ window.addEventListener('DOMContentLoaded', async () => {
         if (body) {
             const criticalErrorDiv = document.createElement('div');
             criticalErrorDiv.innerHTML = `
-                <p style="color: red; text-align:
+                <p style="color: red; text-align: center; padding: 20px; font-size: 1.2em; background-color: #f8d7da; border: 1px solid #f5c6cb;">
+                    <strong>Erro Crítico ao Carregar a Aplicação.</strong> Funcionalidade limitada.
+                </p>`;
+            body.prepend(criticalErrorDiv);
+        }
+    }
+});

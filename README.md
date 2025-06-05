@@ -120,12 +120,12 @@ Estas são capturas de recursos de cada tela da aplicação:
 <hr>
 <div align="center">
   Recurso de filtragem de fontes de água.
-  <img src="https://github.com/user-attachments/assets/58dd701a-94ea-418a-811a-b719ec277131" alt="Dashboard Screen with filter feature" width="" height="" >
+  <img src="https://github.com/user-attachments/assets/58dd701a-94ea-418a-811a-b719ec277131" alt="Dashboard screen with filter feature" width="" height="" >
 </div>
 <hr>
 <div align="center">
   Pop-up para feedback do usuário. Estas reclamações serão enviadas diretamente aos gestores para posterior análise.
-  <img src="https://github.com/user-attachments/assets/f11f9e08-4fc3-4391-a552-f461dfa6542e" alt="User Feedback Pop-up with text field validation" width="" height="" >
+  <img src="https://github.com/user-attachments/assets/f11f9e08-4fc3-4391-a552-f461dfa6542e" alt="User feedback pop-up with text field validation" width="" height="" >
 </div>
 <hr>
 <div align="center">
@@ -144,8 +144,13 @@ Estas são capturas de recursos de cada tela da aplicação:
 </div>
 <hr>
 <div align="center">
+  O gestor consegue gerar insights com IA sobre a qualidade da água em tempo real.
+  <img src="https://github.com/user-attachments/assets/91677278-58fa-41fe-8424-c623cfb4945e" alt="AI insights in real time" width="" height="" >
+</div>
+<hr>
+<div align="center">
   Preview do PDF com os dados para exportação e possibilidade de baixar o material.
-  <img src="https://github.com/user-attachments/assets/4ccab449-c880-416c-900e-086e66d7fae9" alt="PDF preview and download option on Manager Screen Pop-up" width="" height="" >
+  <img src="https://github.com/user-attachments/assets/4ccab449-c880-416c-900e-086e66d7fae9" alt="PDF preview and download option on manager screen pop-up" width="" height="" >
 </div>
 
 ## Contribuição

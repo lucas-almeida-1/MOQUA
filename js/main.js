@@ -3,7 +3,12 @@ import {
     auth as firebaseAuth, 
     getCurrentUserId, 
     app as firebaseApp, 
-    authReadyPromise // Import the promise
+    authReadyPromise, // Import the promise
+    // START: Importação para criação de usuário
+    // Adicione as duas funções abaixo para criar e atualizar o usuário
+    signInWithEmailAndPassword, 
+    updateProfile 
+    // END: Importação para criação de usuário
 } from './firebase.js';
 import { initTheme, setTheme, showPage as displayPage, setupModalEventListeners, goBack as navigateBack } from './ui.js';
 import { 
@@ -18,6 +23,53 @@ import {
 } from './dashboard.js';
 import { setupComplaintFormEventListeners, resetComplaintModal as resetComplaint } from './complaint.js';
 import { setupManagerEventListeners, renderManagerDashboard as renderManagerDash, updateNotificationInputsState as updateManagerInputs } from './manager.js';
+
+
+// START: Função para criar usuário gestor padrão
+// Esta função cria o usuário gestor se ele não existir.
+async function setupDefaultManagerUser(auth) {
+    if (!auth) {
+        console.warn("Setup Gestor: Serviço de autenticação não disponível.");
+        return;
+    }
+
+    const email = "gestor@ufba.br";
+    const password = "senha123";
+    const displayName = "Lucas";
+
+    try {
+        // Tenta fazer o login primeiro para não recriar a senha ou gerar erro.
+        // Se o login funcionar, o usuário já existe.
+        await signInWithEmailAndPassword(auth, email, password);
+        console.log(`Usuário gestor (${email}) já existe e o login foi verificado.`);
+    } catch (loginError) {
+        // Se o erro for 'auth/invalid-credential', significa que o usuário não existe ou a senha está errada.
+        // Para este script, assumimos que se o login falhar, devemos tentar criar.
+        if (loginError.code === 'auth/invalid-credential' || loginError.code === 'auth/user-not-found') {
+            console.log(`Usuário gestor (${email}) não encontrado. Tentando criar...`);
+            try {
+                const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+                console.log("Usuário gestor criado com sucesso:", userCredential.user.uid);
+                
+                await updateProfile(userCredential.user, {
+                    displayName: displayName
+                });
+                console.log("Perfil do gestor atualizado com o nome:", displayName);
+            } catch (creationError) {
+                 // Caso o e-mail exista, mas a senha no script seja diferente da do Firebase
+                if (creationError.code === 'auth/email-already-in-use') {
+                    console.warn(`O email do gestor (${email}) já existe, mas a senha no script está incorreta. Nenhuma ação será tomada.`);
+                } else {
+                    console.error("Erro aninhado ao criar usuário gestor:", creationError);
+                }
+            }
+        } else {
+             console.error("Erro inesperado ao verificar o login do gestor:", loginError);
+        }
+    }
+}
+// END: Função para criar usuário gestor padrão
+
 
 window.App = {
     // State
@@ -115,21 +167,19 @@ window.addEventListener('DOMContentLoaded', async () => {
     try {
         await authReadyPromise; // Wait for Firebase auth to be ready
         
-        // firebaseApp is imported and should be defined if firebase.js loaded and initialized successfully.
-        // The authReadyPromise ensures onAuthStateChanged has completed its first run.
+        // START: Chamada da função para criar usuário
+        // Executa a função de setup após a autenticação estar pronta
+        await setupDefaultManagerUser(firebaseAuth);
+        // END: Chamada da função para criar usuário
+
         if (firebaseApp) { 
             App.init();
         } else {
-            // This case means Firebase app initialization itself failed in firebase.js or was skipped due to placeholder.
             console.error("Instância do Firebase App não foi criada ou falhou. App não pode iniciar completamente com funcionalidades Firebase.");
-            // Initialize the App object anyway to set up UI and non-Firebase parts.
-            // App.init() should be robust enough to handle firebaseApp, db, auth being null.
-            App.init(); // Call App.init() here
+            App.init(); 
 
-            initTheme(); // initTheme is also called within App.init, but calling here ensures theme is set early.
+            initTheme(); 
             
-            // Display a more user-friendly, less disruptive message if needed, or rely on console.
-            // The existing error message display logic can be kept if a prominent UI warning is desired.
             const body = document.querySelector('body');
             if (body) {
                 const errorDiv = document.createElement('div');
@@ -138,32 +188,28 @@ window.addEventListener('DOMContentLoaded', async () => {
                     <p><strong>Aviso:</strong> Algumas funcionalidades online (como salvar dados e insights com IA) estão desabilitadas.
                     A configuração do servidor e banco de dados ainda está em desenvolvimento.</p>`;
                 
-                // Make error message dismissable
                 const dismissButton = document.createElement('button');
                 dismissButton.textContent = 'OK';
                 dismissButton.style.cssText = "margin-left: 15px; padding: 2px 8px; background-color: #856404; color: white; border: none; border-radius: 3px; cursor: pointer;";
                 dismissButton.onclick = () => errorDiv.remove();
                 errorDiv.appendChild(dismissButton);
                 
-                // Insert it after the header
                 const header = document.querySelector('header');
                 if (header) {
                     header.insertAdjacentElement('afterend', errorDiv);
                 } else {
                     body.prepend(errorDiv);
                 }
-                 // Automatically remove after some time if not dismissed
                 setTimeout(() => {
                     if (errorDiv.parentNode) {
                         errorDiv.remove();
                     }
-                }, 15000); // 15 seconds
+                }, 15000); 
             }
         }
     } catch (e) {
         console.error("Erro crítico durante a inicialização da página:", e);
-        initTheme(); // Ensure theme is set
-        // Attempt to initialize App for basic UI even in critical failure
+        initTheme(); 
         try {
             App.init(); 
         } catch (appInitError) {
@@ -171,16 +217,10 @@ window.addEventListener('DOMContentLoaded', async () => {
         }
         
         const initialPageEl = document.getElementById('initial-page');
-        if(initialPageEl) initialPageEl.classList.add('active'); // Show a default page
+        if(initialPageEl) initialPageEl.classList.add('active'); 
 
         const body = document.querySelector('body');
         if (body) {
             const criticalErrorDiv = document.createElement('div');
             criticalErrorDiv.innerHTML = `
-                <p style="color: red; text-align: center; padding: 20px; font-size: 1.2em; background-color: #f8d7da; border: 1px solid #f5c6cb;">
-                    <strong>Erro Crítico ao Carregar a Aplicação.</strong> Funcionalidade limitada.
-                </p>`;
-            body.prepend(criticalErrorDiv);
-        }
-    }
-});
+                <p style="color: red; text-align:

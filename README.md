@@ -1,8 +1,8 @@
-# MOQUA - Monitoramento da Qualidade da Água
+# WMS - Water Management System
 
 ## Descrição
 
-MOQUA é uma aplicação web para monitorar a qualidade da água em universidades com escalabilidade para outros setores e empresas. Permite aos usuários buscar por um local, visualizar dados de qualidade da água, registrar reclamações e, para gestores, analisar dados e gerar relatórios.
+WMS é uma aplicação web para monitorar a qualidade da água em universidades com escalabilidade para outros setores e empresas. Permite aos usuários buscar por um local, visualizar dados de qualidade da água, registrar reclamações e, para gestores, analisar dados e gerar relatórios.
 
 ## Motivação
 
@@ -32,7 +32,7 @@ No momento, o desenvolvimento do projeto está da seguinte forma:
 ## Estrutura de Arquivos
 
 ```
-MOQUA/
+WMS/
 ├── js/
 │   ├── complaint.js               # Lógica para o registro de reclamações
 │   ├── config.js                  # Configurações da aplicação (Firebase, Gemini API)
@@ -55,13 +55,13 @@ MOQUA/
 1.  **Clone o repositório:**
 
     ```bash
-    git clone https://github.com/lucas-almeida-1/MOQUA.git
-    cd MOQUA
+    git clone https://github.com/lucas-almeida-1/WMS.git
+    cd WMS
     ```
 
 2.  **Configurar as chaves de API:**
 
-    *   Crie um arquivo `.env` na raiz do projeto (na pasta `MOQUA/`).
+    *   Crie um arquivo `.env` na raiz do projeto (na pasta `WMS/`).
     *   Copie o conteúdo do arquivo `.env.example` para o arquivo `.env`.
     *   Preencha as chaves de API do Firebase e Gemini no arquivo `.env`.
 
@@ -94,7 +94,7 @@ MOQUA/
 *   As configurações de notificação (SMS, Email, WhatsApp) são apenas simulações e não enviam notificações reais.
 *   Este projeto foi desenvolvido para fins de estudo e demonstração.
 
-## Capturas de tela
+## Capturas de tela [ATUALIZAR!]
 
 Estas são capturas de recursos de cada tela da aplicação:
 

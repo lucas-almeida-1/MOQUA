@@ -91,7 +91,7 @@ WMS/
 
 *   A aplicação utiliza o Firebase para armazenar os dados e autenticar os usuários.
 *   A funcionalidade de análise com IA requer uma chave da API Gemini.
-*   As configurações de notificação (SMS, Email, WhatsApp) são apenas simulações e não enviam notificações reais.
+*   As configurações de notificação (SMS, Email, WhatsApp) são apenas simulações e não enviam notificações reais (por enquanto).
 *   Este projeto foi desenvolvido para fins de estudo e demonstração.
 
 ## Capturas de tela [ATUALIZAR!]

@@ -14,16 +14,23 @@ export function initTheme() {
 }
 
 export function setTheme(theme) {
+    const headerLogo = document.getElementById('header-logo');
     if (theme === 'dark') {
         document.documentElement.classList.add('dark');
         localStorage.setItem('theme', 'dark');
         document.getElementById('theme-toggle-dark')?.classList.add('active');
         document.getElementById('theme-toggle-light')?.classList.remove('active');
+        if (headerLogo) {
+            headerLogo.src = 'assets/images/wms_logo_square_icon_dark.png';
+        }
     } else {
         document.documentElement.classList.remove('dark');
         localStorage.setItem('theme', 'light');
         document.getElementById('theme-toggle-light')?.classList.add('active');
         document.getElementById('theme-toggle-dark')?.classList.remove('active');
+        if (headerLogo) {
+            headerLogo.src = 'assets/images/wms_logo_square_icon.png';
+        }
     }
 }
 

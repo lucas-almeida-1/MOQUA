@@ -3,9 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WMS - Water Management System</title>
-    <!-- Favicon adicionado -->
-    <link id="favicon" rel="icon" href="assets/images/wms_logo.png" type="image/png">
+    <title>WMS</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -35,67 +33,153 @@
     <style>
         .page { display: none; }
         .page.active { display: block; }
-        .modal { display: none; position: fixed; z-index: 100; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.7); padding-top: 60px; }
-        .modal-content { background-color: #fefefe; margin: 5% auto; padding: 20px; border: 1px solid #888; width: 90%; max-width: 550px; border-radius: 0.5rem; position: relative; }
+        
+        .modal {
+            display: none; position: fixed; z-index: 100; left: 0; top: 0; width: 100%; height: 100%;
+            overflow: auto; background-color: rgba(0,0,0,0.7); padding-top: 60px;
+        }
+        .modal-content {
+            background-color: #fefefe; margin: 5% auto; padding: 20px; border: 1px solid #888;
+            width: 90%; max-width: 550px; border-radius: 0.5rem; position: relative;
+        }
         .dark .modal-content { background-color: #2d3748; color: #e2e8f0; border-color: #4a5568; }
         .dark .modal-content label, .dark .modal-content h3, .dark .modal-content p { color: #e2e8f0; }
-        .dark .modal-content input, .dark .modal-content select, .dark .modal-content textarea { background-color: #4a5568; border-color: #718096; color: #e2e8f0; }
+        .dark .modal-content input, .dark .modal-content select, .dark .modal-content textarea {
+            background-color: #4a5568; border-color: #718096; color: #e2e8f0;
+        }
         .dark .modal-content input::placeholder, .dark .modal-content textarea::placeholder { color: #a0aec0; }
-        .close-button { color: #aaa; position: absolute; top: 10px; right: 15px; font-size: 28px; font-weight: bold; }
+        .close-button {
+            color: #aaa; position: absolute; top: 10px; right: 15px; font-size: 28px; font-weight: bold;
+        }
         .dark .close-button { color: #cbd5e0; }
         .close-button:hover, .close-button:focus { color: black; text-decoration: none; cursor: pointer; }
         .dark .close-button:hover, .dark .close-button:focus { color: #f7fafc; }
-        .file-input-area { border: 2px dashed #cbd5e1; padding: 1.5rem; text-align: center; cursor: pointer; border-radius: 0.375rem; }
+        
+        .file-input-area {
+            border: 2px dashed #cbd5e1; padding: 1.5rem; text-align: center; cursor: pointer; border-radius: 0.375rem;
+        }
         .dark .file-input-area { border-color: #4a5568; }
         .file-input-area:hover { border-color: #94a3b8; }
         .dark .file-input-area:hover { border-color: #718096; }
         #file-list li { background-color: #e5e7eb; padding: 0.25rem 0.5rem; margin-top: 0.25rem; border-radius: 0.25rem; font-size: 0.875rem; color: #1f2937; }
         .dark #file-list li { background-color: #4b5563; color: #e5e7eb; }
-        .dark #maintenance-file-list li { background-color: #4b5563; color: #e5e7eb; }
-        #file-list li a, #maintenance-file-list li a { text-decoration: underline; color: #3b82f6; }
-        .dark #file-list li a, .dark #maintenance-file-list li a { color: #60a5fa; }
-        .fab-complaint { position: fixed; bottom: 2rem; right: 2rem; background-color: #F97316; color: white; height: 3.5rem; border-radius: 1.75rem; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 6px rgba(0,0,0,0.1); cursor: pointer; transition: all 0.3s ease-in-out; z-index: 90; overflow: hidden; white-space: nowrap; width: 3.5rem; padding-left: 0; padding-right: 0; }
-        .fab-complaint .fab-icon-container { width: 3.5rem; height: 3.5rem; display: flex; align-items: center; justify-content: center; transition: margin-right 0.3s ease-in-out; }
-        .fab-complaint:hover { width: auto; padding-left: 1rem; padding-right: 1.25rem; }
+        #file-list li a { text-decoration: underline; color: #3b82f6; }
+        .dark #file-list li a { color: #60a5fa; }
+
+        .fab-complaint {
+            position: fixed; bottom: 2rem; right: 2rem; background-color: #F97316; color: white;
+            height: 3.5rem; border-radius: 1.75rem; 
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1); cursor: pointer;
+            transition: width 0.3s ease-in-out, padding-left 0.3s ease-in-out, padding-right 0.3s ease-in-out;
+            z-index: 90; overflow: hidden; white-space: nowrap;
+            width: 3.5rem; 
+            padding-left: 0; 
+            padding-right: 0;
+        }
+         .fab-complaint .fab-icon-container { 
+            width: 3.5rem;
+            height: 3.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: margin-right 0.3s ease-in-out;
+        }
+        .fab-complaint:hover {
+            width: auto; 
+            padding-left: 1rem; padding-right: 1.25rem; 
+        }
         .fab-complaint .fab-icon { font-size: 1.5rem; line-height: 1; display: inline-block;}
-        .fab-complaint .fab-text { font-weight: 500; margin-left: 0.5rem; display: inline-block; max-width: 0; opacity: 0; transition: max-width 0.3s ease-in-out 0.1s, opacity 0.2s ease-in-out 0.1s; }
-        .fab-complaint:hover .fab-text { max-width: 200px; opacity: 1; }
+        .fab-complaint .fab-text { font-weight: 500; margin-left: 0.5rem; display: inline-block; }
+        .fab-complaint .fab-text { max-width: 0; opacity: 0; transition: max-width 0.3s ease-in-out 0.1s, opacity 0.2s ease-in-out 0.1s; }
+        .fab-complaint:hover .fab-text { max-width: 200px; opacity: 1; } 
         .fab-complaint:hover .fab-icon-container { margin-right: 0.5rem; }
         .dark .fab-complaint { background-color: #FB923C; }
         .dark .fab-complaint:hover { background-color: #F97316; }
+
         .theme-switcher { display: flex; align-items: center; background-color: #e5e7eb; border-radius: 9999px; padding: 0.25rem; cursor: pointer; }
         .dark .theme-switcher { background-color: #4b5563; }
         .theme-switcher button { padding: 0.5rem; border-radius: 9999px; transition: background-color 0.3s; color: #4b5563; }
         .dark .theme-switcher button { color: #d1d5db; }
         .theme-switcher button.active { background-color: white; color: #F59E0B; }
         .dark .theme-switcher button.active { background-color: #374151; color: #FCD34D; }
-        .loading-spinner { border: 4px solid rgba(0, 0, 0, 0.1); width: 36px; height: 36px; border-radius: 50%; border-left-color: #09f; animation: spin 1s ease infinite; }
+        .loading-spinner { border: 4px solid rgba(0, 0, 0, 0.1); width: 36px; height: 36px; border-radius: 50%; border-left-color: #09f; animation: spin 1s ease infinite; margin: 20px auto; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         .dark .loading-spinner { border-left-color: #60A5FA; }
+        
         #pdf-preview-modal .modal-content { max-width: 800px; }
         #pdf-preview-iframe { width: 100%; height: 60vh; border: 1px solid #ccc; }
         .dark #pdf-preview-iframe { border-color: #4b5563; }
+
         .custom-card { display: flex; flex-direction: column; overflow: hidden; }
-        .custom-card-image-container { width: 100%; height: 150px; display: flex; align-items: center; justify-content: center; background-color: #f0f0f0; overflow: hidden; }
+        .custom-card-image-container {
+            width: 100%; height: 150px; display: flex; align-items: center; justify-content: center;
+            background-color: #f0f0f0; overflow: hidden;
+        }
         .dark .custom-card-image-container { background-color: #4b5563; }
         .custom-card-image { width: auto; height: 100%; max-width: 100%; object-fit: contain; }
         .custom-card-content { padding: 1rem; }
-        .logout-button { background-color: #ef4444; color: white; height: 2.5rem; border-radius: 1.25rem; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1); cursor: pointer; transition: all 0.3s ease-in-out; overflow: hidden; white-space: nowrap; width: 2.5rem; padding-left: 0; padding-right: 0; }
-        .logout-button .logout-icon-container { width: 2.5rem; height: 2.5rem; display: flex; align-items: center; justify-content: center; transition: margin-right 0.3s ease-in-out; }
-        .logout-button:hover { background-color: #dc2626; width: auto; padding-left: 0.75rem; padding-right: 1rem; }
+
+        .logout-button {
+            background-color: #ef4444; color: white; height: 2.5rem; border-radius: 1.25rem; 
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1); cursor: pointer;
+            transition: width 0.3s ease-in-out, padding-left 0.3s ease-in-out, padding-right 0.3s ease-in-out;
+            overflow: hidden; white-space: nowrap; width: 2.5rem; 
+            padding-left: 0; padding-right: 0;
+        }
+        .logout-button .logout-icon-container { 
+            width: 2.5rem;
+            height: 2.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: margin-right 0.3s ease-in-out;
+        }
+        .logout-button:hover {
+            background-color: #dc2626; width: auto; 
+            padding-left: 0.75rem; padding-right: 1rem; 
+        }
         .logout-button .logout-icon { font-size: 1.25rem; line-height: 1; display: inline-block;}
-        .logout-button .logout-text { font-weight: 500; margin-left: 0.5rem; display: inline-block; max-width: 0; opacity: 0; transition: max-width 0.3s ease-in-out 0.1s, opacity 0.2s ease-in-out 0.1s; }
+        .logout-button .logout-text {
+            font-weight: 500; margin-left: 0.5rem; display: inline-block; max-width: 0; opacity: 0;
+            transition: max-width 0.3s ease-in-out 0.1s, opacity 0.2s ease-in-out 0.1s;
+        }
         .logout-button:hover .logout-text { max-width: 200px; opacity: 1; }
         .logout-button:hover .logout-icon-container { margin-right: 0.5rem; }
         .dark .logout-button { background-color: #f87171; }
         .dark .logout-button:hover { background-color: #ef4444; }
-        .form-error-popup { background-color: white; color: #EF4444; padding: 0.5rem 0.75rem; border-radius: 0.375rem; box-shadow: 0 2px 4px rgba(0,0,0,0.1); border-left: 4px solid #FACC15; font-size: 0.875rem; margin-top: 0.25rem; opacity: 0; max-height: 0; overflow: hidden; transition: opacity 0.3s ease-in-out, max-height 0.3s ease-in-out, margin-top 0.3s ease-in-out; }
-        .dark .form-error-popup { background-color: #4B5563; color: #FCA5A5; border-left-color: #FDE047; }
-        .form-error-popup.show { opacity: 1; max-height: 100px; }
-        .required-asterisk-display { color: red; }
-        .status-indicator-dot { width: 12px; height: 12px; border-radius: 50%; display: inline-block; margin-right: 8px; }
+
+        .form-error-popup {
+            background-color: white;
+            color: #EF4444; 
+            padding: 0.5rem 0.75rem; 
+            border-radius: 0.375rem; 
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            border-left: 4px solid #FACC15; 
+            font-size: 0.875rem; 
+            margin-top: 0.25rem; 
+            opacity: 0;
+            max-height: 0;
+            overflow: hidden;
+            transition: opacity 0.3s ease-in-out, max-height 0.3s ease-in-out, margin-top 0.3s ease-in-out;
+        }
+        .dark .form-error-popup {
+            background-color: #4B5563; 
+            color: #FCA5A5; 
+            border-left-color: #FDE047; 
+        }
+        .form-error-popup.show {
+            opacity: 1;
+            max-height: 100px; 
+        }
+        .required-asterisk-display {
+            color: red;
+        }
+        #filter-options { display: grid; } 
     </style>
     <!-- Load auto-generated environment config first -->
-    <script src="js/env-config.js"></script>
+    <script src="js/env-config.js"></script> 
     <!-- Load JavaScript modules -->
     <script type="module" src="js/config.js"></script>
     <script type="module" src="js/firebase.js"></script>
@@ -106,41 +190,37 @@
     <script type="module" src="js/main.js"></script>
 </head>
 <body class="bg-gray-100 dark:bg-dark-bg text-gray-900 dark:text-dark-text font-sans transition-colors duration-300">
-    <!-- Cabeçalho com logo e estrutura de layout -->
     <header class="fixed top-0 left-0 right-0 bg-white dark:bg-dark-card shadow-md p-3 z-50 flex justify-between items-center">
-        <div class="flex items-center">
-            <img id="header-logo" src="assets/images/wms_logo_square_icon.png" alt="WMS Logo" class="h-10 w-10 mr-4">
-        </div>
         <div class="flex-grow text-center">
-            <h1 class="text-xl sm:text-2xl font-bold text-primary dark:text-dark-primary">WMS - Water Management System</h1>
+            <h1 class="text-2xl font-bold text-primary dark:text-dark-primary">WMS - Water Management System</h1>
         </div>
-        <div class="flex items-center">
-            <div class="theme-switcher">
-                <button id="theme-toggle-light" title="Modo Claro">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
-                </button>
-                <button id="theme-toggle-dark" title="Modo Escuro">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
-                </button>
-            </div>
+        <div class="theme-switcher">
+            <button id="theme-toggle-light" title="Modo Claro">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+            </button>
+            <button id="theme-toggle-dark" title="Modo Escuro">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+            </button>
         </div>
     </header>
 
-    <div class="container mx-auto p-4 min-h-screen pt-24">
-        <!-- Página Inicial: Busca Global -->
+    <div class="container mx-auto p-4 min-h-screen pt-20">
+        <!-- Initial Page: Global Search -->
         <div id="initial-page" class="page">
-            <div class="text-center mb-6">
+            <div class="text-center mb-2"> 
                 <p class="text-lg text-gray-600 dark:text-gray-300">Busque por uma universidade ou setor/instituto.</p>
             </div>
-            <div>
+            <div class="mb-6">
                 <input type="text" id="search-global" placeholder="🔎 UFBA, Instituto de Computação, IC..." class="w-full p-3 border border-gray-300 dark:border-dark-border rounded-lg shadow-sm focus:ring-2 focus:ring-primary dark:focus:ring-dark-primary focus:border-primary dark:focus:border-dark-primary bg-white dark:bg-dark-card">
             </div>
-            <div id="global-search-results" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-6"></div>
+            <div id="global-search-results" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
         </div>
 
-        <!-- Página de Seleção de Instituto/Setor -->
+        <!-- Institute/Sector Selection Page -->
         <div id="institute-sector-selection-page" class="page">
-             <button id="back-to-global-search-btn" class="mb-4 bg-gray-500 hover:bg-gray-600 dark:bg-gray-600 dark:hover:bg-gray-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors">&larr; Voltar para Busca Global</button>
+             <button id="back-to-global-search-btn" class="mb-4 bg-gray-500 hover:bg-gray-600 dark:bg-gray-600 dark:hover:bg-gray-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors">
+                &larr; Voltar para Busca Global
+            </button>
             <header class="mb-8 text-center">
                 <h2 id="institute-sector-search-title" class="text-3xl font-bold text-secondary dark:text-dark-secondary">Setores/Institutos</h2>
                 <p class="text-md text-gray-600 dark:text-gray-300">Selecione o setor/instituto para visualizar o dashboard.</p>
@@ -151,45 +231,54 @@
             <div id="institute-sector-cards" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div>
         </div>
 
-        <!-- PÁGINA DO DASHBOARD PÚBLICO -->
+        <!-- Dashboard Page -->
         <div id="dashboard-page" class="page">
             <div class="flex justify-between items-center mb-4">
-                <button id="dashboard-back-btn" class="bg-gray-500 hover:bg-gray-600 dark:bg-gray-600 dark:hover:bg-gray-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors">&larr; Voltar</button>
-                <button id="dashboard-login-btn" class="bg-gray-700 hover:bg-gray-800 dark:bg-gray-600 dark:hover:bg-gray-500 text-white font-semibold py-2 px-4 rounded-lg transition-colors shadow-md">🔒 Acesso Restrito</button>
-            </div>
-            <header class="mb-6 text-center">
-                <h2 id="dashboard-title" class="text-3xl font-bold text-indigo-700 dark:text-indigo-300">Dashboard de Monitoramento</h2>
-            </header>
-            
-            <div id="general-status-card" class="bg-white dark:bg-dark-card p-6 rounded-lg shadow-lg mb-6 flex items-center space-x-6">
-                </div>
-
-            <div class="text-center">
-                <button id="view-equipment-btn" data-modal-target="equipment-status-modal" class="bg-secondary hover:bg-secondary-hover dark:bg-dark-secondary dark:hover:bg-dark-secondary-hover text-white font-bold py-3 px-6 rounded-lg shadow-md transition-transform transform hover:scale-105">
-                    Ver Status dos Equipamentos
+                <button id="dashboard-back-btn" class="bg-gray-500 hover:bg-gray-600 dark:bg-gray-600 dark:hover:bg-gray-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors">
+                    &larr; Voltar
+                </button>
+                <button id="dashboard-login-btn" class="bg-gray-700 hover:bg-gray-800 dark:bg-gray-600 dark:hover:bg-gray-500 text-white font-semibold py-2 px-4 rounded-lg transition-colors shadow-md">
+                    🔒 Acesso Restrito
                 </button>
             </div>
+            <header class="mb-6 text-center"> <h2 id="dashboard-title" class="text-3xl font-bold text-indigo-700 dark:text-indigo-300">Dashboard</h2> </header>
+            
+            <div class="mb-6 bg-white dark:bg-dark-card p-4 rounded-lg shadow">
+                <div class="flex items-center mb-3">
+                    <h3 class="text-lg font-semibold text-gray-700 dark:text-gray-200 mr-4">Filtro</h3>
+                    <input type="text" id="filter-name-dashboard" placeholder="🔎 Filtrar por nome do local..." class="flex-grow p-2 border border-gray-300 dark:border-dark-border rounded-md bg-white dark:bg-gray-700 focus:ring-indigo-500 dark:focus:ring-indigo-400 focus:border-indigo-500 dark:focus:border-indigo-400 text-sm">
+                    <button id="clear-filters-btn" title="Limpar Filtros" class="ml-2 p-2 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-500 bg-gray-100 dark:bg-gray-600 rounded-md flex items-center justify-center text-sm">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-1"><polyline points="23 4 1 4 10 12.46 10 19 14 21 14 12.46 23 4"></polyline><line x1="1" y1="4" x2="23" y2="4"></line></svg>
+                        Limpar Filtragem
+                    </button>
+                </div>
+                <div id="filter-options" class="space-y-3 sm:space-y-0 sm:grid sm:grid-cols-2 sm:gap-4 pt-3 border-t border-gray-200 dark:border-gray-700"> 
+                    <div id="filter-type">
+                        <p class="font-medium text-sm text-gray-700 dark:text-gray-300 mb-1">Tipo:</p>
+                        <label class="inline-flex items-center mr-2"><input type="checkbox" value="Bebedouro" class="form-checkbox rounded text-indigo-600 dark:text-indigo-400"> <span class="ml-1 text-sm">Bebedouro</span></label>
+                        <label class="inline-flex items-center mr-2"><input type="checkbox" value="Torneira" class="form-checkbox rounded text-indigo-600 dark:text-indigo-400"> <span class="ml-1 text-sm">Torneira</span></label>
+                        <label class="inline-flex items-center"><input type="checkbox" value="Vaso Sanitário" class="form-checkbox rounded text-indigo-600 dark:text-indigo-400"> <span class="ml-1 text-sm">Vaso Sanitário</span></label>
+                    </div>
+                    <div id="filter-status">
+                        <p class="font-medium text-sm text-gray-700 dark:text-gray-300 mb-1">Status:</p>
+                        <label class="inline-flex items-center mr-2"><input type="checkbox" value="good" class="form-checkbox rounded text-green-500"> <span class="ml-1 text-sm">Boa</span></label>
+                        <label class="inline-flex items-center mr-2"><input type="checkbox" value="attention" class="form-checkbox rounded text-yellow-500"> <span class="ml-1 text-sm">Atenção</span></label>
+                        <label class="inline-flex items-center"><input type="checkbox" value="critical" class="form-checkbox rounded text-red-500"> <span class="ml-1 text-sm">Crítica</span></label>
+                    </div>
+                </div>
+            </div>
 
+            <div id="water-points-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
             <button data-modal-target="complaint-modal" class="fab-complaint">
                 <span class="fab-icon-container"><span class="fab-icon">⚠️</span></span><span class="fab-text">Fazer Reclamação</span>
             </button>
         </div>
 
-        <div id="equipment-status-modal" class="modal">
-            <div class="modal-content">
-                <span class="close-button">&times;</span>
-                <h3 class="text-xl font-semibold mb-4 text-secondary dark:text-dark-secondary">Status de Manutenção dos Bebedouros</h3>
-                <div id="equipment-status-list" class="space-y-4 max-h-[60vh] overflow-y-auto pr-2">
-                    </div>
-                 <div class="flex justify-end pt-3 border-t border-gray-200 dark:border-gray-700 mt-4">
-                    <button type="button" class="btn-close-modal bg-gray-300 hover:bg-gray-400 dark:bg-gray-600 dark:hover:bg-gray-500 text-gray-800 dark:text-gray-200 font-semibold py-2 px-4 rounded-lg">Fechar</button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Página de Login -->
+        <!-- Login Page -->
         <div id="login-page" class="page">
-             <button id="login-back-btn" class="mb-4 bg-gray-500 hover:bg-gray-600 dark:bg-gray-600 dark:hover:bg-gray-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors">&larr; Voltar</button>
+            <button id="login-back-btn" class="mb-4 bg-gray-500 hover:bg-gray-600 dark:bg-gray-600 dark:hover:bg-gray-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors">
+                &larr; Voltar
+            </button>
             <div class="max-w-md mx-auto bg-white dark:bg-dark-card p-8 rounded-lg shadow-xl mt-10">
                 <h2 class="text-2xl font-bold text-center text-gray-700 dark:text-gray-200 mb-6">Acesso Restrito</h2>
                 <form id="login-form" novalidate>
@@ -198,112 +287,148 @@
                         <input type="email" id="email" name="email" required class="mt-1 block w-full p-3 border border-gray-300 dark:border-dark-border rounded-md shadow-sm focus:ring-indigo-500 dark:focus:ring-indigo-400 focus:border-indigo-500 dark:focus:border-indigo-400 bg-white dark:bg-gray-700">
                         <div id="email-login-error-popup" class="form-error-popup"></div>
                     </div>
-                    <div class="mb-4">
+                    <div class="mb-4"> 
                         <label for="password" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Senha <span class="required-asterisk-display">*</span></label>
                         <div class="relative mt-1">
                             <input type="password" id="password" name="password" required class="block w-full p-3 border border-gray-300 dark:border-dark-border rounded-md shadow-sm focus:ring-indigo-500 dark:focus:ring-indigo-400 focus:border-indigo-500 dark:focus:border-indigo-400 bg-white dark:bg-gray-700">
                         </div>
                         <div id="password-login-error-popup" class="form-error-popup"></div>
                     </div>
-                    <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 text-white font-bold py-3 px-4 rounded-lg transition-colors shadow-md mt-2">Entrar</button>
+                    <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 text-white font-bold py-3 px-4 rounded-lg transition-colors shadow-md mt-2">
+                        Entrar
+                    </button>
                 </form>
             </div>
         </div>
 
-        <!-- PÁGINA DO GESTOR (REESTRUTURADA) -->
+        <!-- Manager Dashboard Page -->
         <div id="manager-dashboard-page" class="page">
             <div class="flex justify-between items-center mb-4">
-                <button id="return-to-dashboard-btn" class="bg-gray-500 hover:bg-gray-600 dark:bg-gray-600 dark:hover:bg-gray-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors">&larr; Retornar ao Dashboard Público</button>
+                <button id="return-to-dashboard-btn" class="bg-gray-500 hover:bg-gray-600 dark:bg-gray-600 dark:hover:bg-gray-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors">
+                    &larr; Retornar ao Dashboard Público
+                </button>
                 <button id="manager-logout-btn" class="logout-button" title="Fazer Logout">
-                    <span class="logout-icon-container"><span class="logout-icon"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg></span></span>
+                    <span class="logout-icon-container"><span class="logout-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+                    </span></span>
                     <span class="logout-text">Fazer Logout</span>
                 </button>
             </div>
             <header class="mb-8">
-                <h2 id="manager-title" class="text-3xl font-bold text-purple-700 dark:text-purple-300">Painel Administrativo</h2>
-                <p class="text-gray-600 dark:text-gray-300">Bem-vindo, <span id="manager-welcome-name">Gestor</span>.</p>
+                <h2 class="text-3xl font-bold text-purple-700 dark:text-purple-300">Painel do Gestor</h2>
+                <p class="text-gray-600 dark:text-gray-300">Bem-vindo, <span id="manager-welcome-name">Gestor</span>.</p> <!-- Default name -->
             </header>
-            
-            <!-- Cards de Gestão -->
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                <!-- Coluna Esquerda -->
-                <div>
-                    <!-- Card de Gestão de Usuários (Visível para Admin Geral) -->
-                    <div id="user-management-card" class="bg-white dark:bg-dark-card p-6 rounded-lg shadow-lg mb-8 hidden">
-                        <h3 class="text-xl font-semibold text-purple-600 dark:text-purple-400 mb-4">Gerenciar Usuários</h3>
-                        <form id="create-user-form">
-                            <h4 class="font-semibold mb-2">Criar Novo Usuário</h4>
-                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-2">
-                                <div><label for="new-user-name" class="block text-sm">Nome</label><input type="text" id="new-user-name" class="mt-1 w-full p-2 border dark:border-dark-border rounded bg-white dark:bg-gray-700" required></div>
-                                <div><label for="new-user-email" class="block text-sm">Email</label><input type="email" id="new-user-email" class="mt-1 w-full p-2 border dark:border-dark-border rounded bg-white dark:bg-gray-700" required></div>
-                                <div><label for="new-user-password" class="block text-sm">Senha</label><input type="password" id="new-user-password" class="mt-1 w-full p-2 border dark:border-dark-border rounded bg-white dark:bg-gray-700" required></div>
-                                <div><label for="new-user-role" class="block text-sm">Cargo/Permissão</label><select id="new-user-role" class="mt-1 w-full p-2 border dark:border-dark-border rounded bg-white dark:bg-gray-700" required><option value="admin-instituto">Admin de Instituto</option><option value="admin-geral">Admin Geral</option></select></div>
-                             </div>
-                            <div id="new-user-institute-selector-container" class="mb-4">
-                                <label for="new-user-institute" class="block text-sm">Instituto</label>
-                                <select id="new-user-institute" class="mt-1 w-full p-2 border dark:border-dark-border rounded bg-white dark:bg-gray-700" required>
-                                    <!-- Opções preenchidas dinamicamente -->
-                                </select>
-                            </div>
-                            <button type="submit" class="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg">Criar Usuário</button>
-                        </form>
-                    </div>
 
-                    <!-- Card de Reclamações -->
-                    <div class="bg-white dark:bg-dark-card p-6 rounded-lg shadow-lg mb-8">
-                        <h3 class="text-xl font-semibold text-purple-600 dark:text-purple-400 mb-4">Reclamações Recebidas</h3>
-                        <div id="complaints-loading" class="text-center dark:text-gray-300"><p>Carregando...</p><div class="loading-spinner mx-auto mt-2"></div></div>
-                        <div id="complaints-list-container" class="overflow-x-auto">
-                            <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700 hidden">
-                                <thead class="bg-gray-50 dark:bg-gray-800">
-                                    <tr>
-                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Data</th>
-                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Local</th>
-                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Descrição</th>
-                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Status</th>
-                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Ações</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="complaints-table-body" class="bg-white dark:bg-dark-card divide-y divide-gray-200 dark:divide-gray-600"></tbody>
-                            </table>
-                            <p id="no-complaints-message" class="text-center text-gray-500 dark:text-gray-400 hidden">Nenhuma reclamação encontrada.</p>
-                        </div>
-                    </div>
+            <!-- Card de Reclamações -->
+            <div class="mb-8 bg-white dark:bg-dark-card p-6 rounded-lg shadow-lg">
+                <h3 class="text-xl font-semibold text-purple-600 dark:text-purple-400 mb-4">Reclamações Recebidas Recentemente</h3>
+                <div id="complaints-loading" class="text-center dark:text-gray-300">
+                    <p>Carregando reclamações...</p>
+                    <div class="loading-spinner mx-auto mt-2"></div>
                 </div>
+                <div id="complaints-list-container" class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700 hidden">
+                        <thead class="bg-gray-50 dark:bg-gray-800">
+                            <tr>
+                                <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Data</th>
+                                <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Setor</th>
+                                <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Tipo Local</th>
+                                <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Descrição</th>
+                                <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Usuário</th>
+                                <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="complaints-table-body" class="bg-white dark:bg-dark-card divide-y divide-gray-200 dark:divide-gray-600">
+                            <!-- Linhas da tabela (<tr>) -->
+                        </tbody>
+                    </table>
+                    <p id="no-complaints-message" class="text-center text-gray-500 dark:text-gray-400 hidden">Nenhuma reclamação encontrada.</p>
+                </div>
+            </div>
 
-                <!-- Coluna Direita -->
-                <div>
-                    <!-- Card de Equipamentos e Manutenção -->
-                    <div class="bg-white dark:bg-dark-card p-6 rounded-lg shadow-lg mb-8">
-                        <h3 class="text-xl font-semibold text-purple-600 dark:text-purple-400 mb-4">Gestão de Equipamentos</h3>
-                        <button id="register-maintenance-btn" class="w-full bg-teal-500 hover:bg-teal-600 text-white font-bold py-2 px-4 rounded-lg mb-4">Registrar Nova Manutenção</button>
-                        
-                        <h4 class="font-semibold mb-2 mt-4">Aprovações de Manutenção Pendentes</h4>
-                        <div id="pending-maintenance-list" class="space-y-3">
-                           <p class="text-gray-500 text-sm">Nenhuma solicitação pendente.</p>
-                           <!-- Itens pendentes aparecerão aqui -->
-                        </div>
-                    </div>
-
-                    <!-- Card de Relatórios -->
-                    <div class="bg-white dark:bg-dark-card p-6 rounded-lg shadow-lg">
-                        <h3 class="text-xl font-semibold text-purple-600 dark:text-purple-400 mb-4">Relatórios de Equipamentos</h3>
-                        <p class="text-sm mb-4 text-gray-600 dark:text-gray-400">Gere relatórios sobre o status de manutenção dos equipamentos.</p>
-                        <div id="equipment-report-generator">
-                            <!-- Select de instituto (para admin geral) -->
-                            <div id="report-institute-selector-container" class="mb-4 hidden">
-                                <label for="report-institute-selector" class="block text-sm font-medium">Selecione o Instituto:</label>
-                                <select id="report-institute-selector" class="mt-1 block w-full p-2 border dark:border-dark-border rounded-md shadow-sm bg-white dark:bg-gray-700"></select>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="bg-white dark:bg-dark-card p-6 rounded-lg shadow-lg">
+                    <h3 class="text-xl font-semibold text-purple-600 dark:text-purple-400 mb-4">Visão Geral dos Dados - Tempo Real</h3>
+                     <div id="manager-realtime-data" class="mt-4 p-4 bg-gray-50 dark:bg-gray-700 rounded-md border border-gray-200 dark:border-gray-600 text-sm space-y-1"></div>
+                </div>
+                <div class="bg-white dark:bg-dark-card p-6 rounded-lg shadow-lg">
+                    <h3 class="text-xl font-semibold text-purple-600 dark:text-purple-400 mb-2">Configurações de Notificação</h3>
+                     <button id="edit-notification-prefs-btn" class="mb-3 bg-blue-500 hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-700 text-white font-semibold py-1 px-3 rounded-lg text-xs">Editar Preferências</button>
+                    <div class="space-y-3">
+                        <div>
+                            <label class="inline-flex items-center">
+                                <input type="checkbox" id="sms-checkbox" class="form-checkbox h-5 w-5 text-purple-600 dark:text-purple-400 rounded"> 
+                                <span class="ml-2 text-gray-700 dark:text-gray-300">SMS</span>
+                            </label>
+                            <div id="sms-number-container" class="mt-1 hidden">
+                                <input type="tel" id="sms-number" placeholder="+5571912345678" class="w-full p-2 border dark:border-dark-border rounded-md text-sm bg-white dark:bg-gray-700">
                             </div>
-                            <button id="generate-equipment-report-btn" class="w-full bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded-lg">Gerar Relatório</button>
+                        </div>
+                        <div>
+                            <label class="inline-flex items-center">
+                                <input type="checkbox" id="email-checkbox" class="form-checkbox h-5 w-5 text-purple-600 dark:text-purple-400 rounded"> 
+                                <span class="ml-2 text-gray-700 dark:text-gray-300">Email</span>
+                            </label>
+                             <div id="email-address-container" class="mt-1 hidden">
+                                <input type="email" id="email-address" placeholder="gestor@exemplo.com" class="w-full p-2 border dark:border-dark-border rounded-md text-sm bg-white dark:bg-gray-700">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="inline-flex items-center">
+                                <input type="checkbox" id="whatsapp-checkbox" class="form-checkbox h-5 w-5 text-purple-600 dark:text-purple-400 rounded"> 
+                                <span class="ml-2 text-gray-700 dark:text-gray-300">WhatsApp</span>
+                            </label>
+                            <div id="whatsapp-number-container" class="mt-1 hidden">
+                                <input type="tel" id="whatsapp-number" placeholder="+5571912345678" class="w-full p-2 border dark:border-dark-border rounded-md text-sm bg-white dark:bg-gray-700">
+                            </div>
+                            <div id="whatsapp-autopopulate-container" class="mt-1 hidden">
+                                <label class="inline-flex items-center text-xs">
+                                    <input type="checkbox" id="whatsapp-autopopulate-sms" class="form-checkbox h-4 w-4 text-purple-600 dark:text-purple-400 rounded">
+                                    <span class="ml-1 text-gray-600 dark:text-gray-400">Autopreencher com mesmo número para SMS.</span>
+                                </label>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
+            <div class="mt-8 bg-white dark:bg-dark-card p-6 rounded-lg shadow-lg">
+                <h3 class="text-xl font-semibold text-purple-600 dark:text-purple-400 mb-4">Análise Inteligente & Relatórios</h3>
+                 <button id="analyze-with-ai-btn" class="mb-4 bg-teal-500 hover:bg-teal-600 dark:bg-teal-600 dark:hover:bg-teal-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors flex items-center justify-center">
+                    Gerar análise da atual situação com IA
+                </button>
+                <div id="ai-analysis-result" class="p-4 bg-gray-50 dark:bg-gray-700 rounded-md border border-gray-200 dark:border-gray-600 min-h-[100px]"></div>
+                <h4 class="text-lg font-semibold text-purple-600 dark:text-purple-400 mt-6 mb-3">Geração de Relatórios</h4>
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 items-end">
+                    <div>
+                        <label for="report-period-pdf" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Período:</label>
+                        <select id="report-period-pdf" name="report-period-pdf" class="mt-1 block w-full p-2 border dark:border-dark-border rounded-md shadow-sm bg-white dark:bg-gray-700">
+                            <option value="diario">Diário</option> 
+                            <option value="semanal">Semanal</option> 
+                            <option value="mensal" selected>Mensal</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="report-type-pdf" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Tipo:</label>
+                        <select id="report-type-pdf" name="report-type-pdf" class="mt-1 block w-full p-2 border dark:border-dark-border rounded-md shadow-sm bg-white dark:bg-gray-700">
+                            <option>Completo</option> <option>Apenas Irregularidades</option> <option>Tempo de Resolução</option>
+                        </select>
+                    </div>
+                    <div class="sm:col-span-2 md:col-span-1">
+                         <button id="generate-pdf-btn" class="w-full bg-green-500 hover:bg-green-600 dark:bg-green-600 dark:hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors h-10">
+                            Gerar Relatório PDF
+                        </button>
+                    </div>
+                </div>
+                 <div class="mt-3">
+                    <label class="inline-flex items-center">
+                        <input type="checkbox" id="add-ai-to-report-checkbox" class="form-checkbox h-4 w-4 text-purple-600 dark:text-purple-400 rounded">
+                        <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">Adicionar última análise gerada com IA ao relatório?</span>
+                    </label>
+                </div>
+            </div>
         </div>
 
-        <!-- MODAIS -->
-        <!-- Modal de Reclamação (Estrutura mantida) -->
+        <!-- Complaint Modal -->
         <div id="complaint-modal" class="modal">
             <div class="modal-content">
                 <span class="close-button">&times;</span>
@@ -323,7 +448,7 @@
                     </div>
                     <div class="mb-4">
                         <label class="block text-sm font-medium">Anexar Arquivos</label>
-                        <div id="file-drop-area" class="mt-1 file-input-area"><p class="text-gray-500 dark:text-gray-400">Arraste e solte ou clique.</p><input type="file" id="attachment" name="attachment" multiple class="hidden"></div>
+                        <div id="file-drop-area" class="mt-1 file-input-area"><p class="text-gray-500 dark:text-gray-400">Arraste e solte ou clique para selecionar.</p><input type="file" id="attachment" name="attachment" multiple class="hidden"></div>
                         <div id="file-list" class="mt-2 text-xs"></div>
                     </div>
                     <div class="mb-1">
@@ -335,55 +460,54 @@
                         <div id="user-identification-error-popup" class="form-error-popup"></div>
                     </div>
                     <div class="flex justify-end pt-3 border-t border-gray-200 dark:border-gray-700 mt-4">
-                        <button type="button" class="btn-close-modal mr-2 bg-gray-300 hover:bg-gray-400 dark:bg-gray-600 dark:hover:bg-gray-500 text-gray-800 dark:text-gray-200 font-semibold py-2 px-4 rounded-lg">Cancelar</button>
+                        <button type="button" onclick="document.getElementById('complaint-modal').style.display='none'" class="mr-2 bg-gray-300 hover:bg-gray-400 dark:bg-gray-600 dark:hover:bg-gray-500 text-gray-800 dark:text-gray-200 font-semibold py-2 px-4 rounded-lg">Cancelar</button>
                         <button type="submit" class="bg-accent hover:bg-accent-hover dark:bg-dark-accent dark:hover:bg-dark-accent-hover text-white font-semibold py-2 px-4 rounded-lg">Enviar</button>
                     </div>
                 </form>
             </div>
         </div>
-
-        <!-- Novo Modal de Registro de Manutenção -->
-        <div id="maintenance-modal" class="modal">
+        
+        <!-- Water Alert Modal -->
+        <div id="water-alert-modal" class="modal">
             <div class="modal-content">
-                <span class="close-button">&times;</span>
-                <h3 class="text-xl font-semibold mb-4 text-teal-600 dark:text-teal-400">Registrar Manutenção de Equipamento</h3>
-                <form id="maintenance-form" novalidate>
-                    <div class="mb-4">
-                        <label for="maintenance-institute" class="block text-sm font-medium">Instituição</label>
-                        <select id="maintenance-institute" name="maintenance-institute" required class="mt-1 block w-full p-2 border rounded-md shadow-sm"></select>
-                    </div>
-                    <div class="mb-4">
-                        <label for="maintenance-equipment" class="block text-sm font-medium">Equipamento (Bebedouro)</label>
-                        <select id="maintenance-equipment" name="maintenance-equipment" required class="mt-1 block w-full p-2 border rounded-md shadow-sm"></select>
-                    </div>
-                    <div class="mb-4">
-                        <label class="block text-sm font-medium">Foto do Selo de Manutenção</label>
-                        <div id="maintenance-file-drop-area" class="mt-1 file-input-area"><p class="text-gray-500 dark:text-gray-400">Arraste a foto ou clique</p><input type="file" id="maintenance-attachment" name="maintenance-attachment" accept="image/*" class="hidden"></div>
-                        <div id="maintenance-file-list" class="mt-2 text-xs"></div>
-                    </div>
-                    <!-- Campos "OCR" -->
-                    <fieldset id="ocr-fields" disabled class="grid grid-cols-2 gap-4 mb-4">
-                        <div>
-                            <label for="maintenance-date" class="block text-sm font-medium">Data da Manutenção</label>
-                            <input type="date" id="maintenance-date" name="maintenance-date" class="mt-1 block w-full p-2 border rounded-md shadow-sm">
-                        </div>
-                        <div>
-                            <label for="maintenance-validity" class="block text-sm font-medium">Data de Validade</label>
-                            <input type="date" id="maintenance-validity" name="maintenance-validity" class="mt-1 block w-full p-2 border rounded-md shadow-sm">
-                        </div>
-                    </fieldset>
-                    <div class="flex justify-end pt-3 border-t border-gray-200 dark:border-gray-700 mt-4">
-                        <button type="button" class="btn-close-modal mr-2 bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold py-2 px-4 rounded-lg">Cancelar</button>
-                        <button id="submit-maintenance-btn" type="submit" disabled class="bg-gray-400 text-white font-semibold py-2 px-4 rounded-lg cursor-not-allowed">Concluir Registro</button>
-                    </div>
-                </form>
+                <span class="close-button" onclick="document.getElementById('water-alert-modal').style.display='none'">&times;</span>
+                <div class="text-center">
+                    <svg class="mx-auto mb-4 w-20 h-20 text-yellow-400 dark:text-yellow-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                    <h3 class="text-xl font-semibold mb-2 text-yellow-700 dark:text-yellow-300">Alerta de Qualidade da Água!</h3>
+                    <p id="water-alert-message" class="text-gray-700 dark:text-gray-300"></p>
+                    <button onclick="document.getElementById('water-alert-modal').style.display='none'" class="mt-6 bg-yellow-500 hover:bg-yellow-600 dark:bg-yellow-400 dark:hover:bg-yellow-500 text-white dark:text-gray-800 font-semibold py-2 px-6 rounded-lg">Entendi</button>
+                </div>
             </div>
         </div>
 
-        <!-- Outros Modais (sem alterações significativas) -->
-        <div id="water-alert-modal" class="modal"><div class="modal-content"><span class="close-button" onclick="this.parentElement.parentElement.style.display='none'">&times;</span><div class="text-center"><svg class="mx-auto mb-4 w-20 h-20 text-yellow-400 dark:text-yellow-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg><h3 class="text-xl font-semibold mb-2 text-yellow-700 dark:text-yellow-300">Alerta de Qualidade da Água!</h3><p id="water-alert-message" class="text-gray-700 dark:text-gray-300"></p><button onclick="this.parentElement.parentElement.parentElement.style.display='none'" class="mt-6 bg-yellow-500 hover:bg-yellow-600 text-white font-semibold py-2 px-6 rounded-lg">Entendi</button></div></div></div>
-        <div id="notification-modal" class="modal"><div class="modal-content"><span class="close-button" onclick="this.parentElement.parentElement.style.display='none'">&times;</span><div id="notification-message-container" class="text-center"><div id="notification-icon-container"></div><p id="notification-message" class="text-gray-700 dark:text-gray-300 text-lg"></p><button onclick="this.parentElement.parentElement.parentElement.style.display='none'" class="mt-6 bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-6 rounded-lg">OK</button></div></div></div>
-        <div id="pdf-preview-modal" class="modal"><div class="modal-content"><span class="close-button" onclick="this.parentElement.parentElement.style.display='none'">&times;</span><h3 id="pdf-preview-title" class="text-xl font-semibold mb-4 text-purple-700 dark:text-purple-300">Pré-visualização do Relatório</h3><iframe id="pdf-preview-iframe" title="Pré-visualização do PDF"></iframe><div class="mt-4 flex justify-end"><button id="download-pdf-btn" class="bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded-lg flex items-center"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>Baixar PDF</button></div></div></div>
+        <!-- Notification Modal -->
+        <div id="notification-modal" class="modal">
+            <div class="modal-content">
+                <span class="close-button" onclick="document.getElementById('notification-modal').style.display='none'">&times;</span>
+                <div id="notification-message-container" class="text-center">
+                     <div id="notification-icon-container">
+                        <!-- Icon injected by JS -->
+                     </div>
+                    <p id="notification-message" class="text-gray-700 dark:text-gray-300 text-lg"></p>
+                    <button onclick="document.getElementById('notification-modal').style.display='none'" class="mt-6 bg-blue-500 hover:bg-blue-600 dark:bg-blue-400 dark:hover:bg-blue-500 text-white dark:text-gray-800 font-semibold py-2 px-6 rounded-lg">OK</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- PDF Preview Modal -->
+        <div id="pdf-preview-modal" class="modal">
+            <div class="modal-content">
+                <span class="close-button" onclick="document.getElementById('pdf-preview-modal').style.display='none'">&times;</span>
+                <h3 class="text-xl font-semibold mb-4 text-purple-700 dark:text-purple-300">Pré-visualização do Relatório PDF</h3>
+                <iframe id="pdf-preview-iframe" title="Pré-visualização do PDF"></iframe>
+                <div class="mt-4 flex justify-end">
+                    <button id="download-pdf-btn" class="bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded-lg flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                        Baixar PDF
+                    </button>
+                </div>
+            </div>
+        </div>
     </div>
 </body>
 </html>
